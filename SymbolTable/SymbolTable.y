@@ -80,6 +80,10 @@ ASSIGNMENTSTATEMENT : id equal TERNARY {assignNewValue($1, $3);}
 					| id multiplication equal TERNARY {assignMultiplicationEqual($1, $4);}
 					| id division equal TERNARY {assignDivisionEqual($1, $4);}
 					| id modulo equal TERNARY {assignModuloEqual($1, $4);}
+					| increment id {unaryIncrementOfID($2);}
+					| id increment {unaryIncrementOfID($1);}
+					| decrement id {unaryDecrementOfID($2);}
+					| id decrement {unaryDecrementOfID($1);}
 					;
 
 TERNARY : LOGICAL questionmark LOGICAL colon LOGICAL {$$ = ternary($1, $3, $5);}

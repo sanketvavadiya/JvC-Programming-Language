@@ -31,6 +31,29 @@ struct SymbolTable{
     struct SymbolTable *next;
 }*origin_of_symbols;
 
+string getDatatype(int datatype_of){
+    switch(datatype_of){
+        case INTEGER:
+            return "int";
+            break;
+        case FLOAT:
+            return "float";
+            break;
+        case DOUBLE:
+            return "double";
+            break;
+        case CHARACTER:
+            return "char";
+            break;
+        case BOOLEAN:
+            return "boolean";
+            break;
+        default:
+            return "string";
+            break;
+    }
+}
+
 char* toString(struct DatatypeAndValue *datatype_and_value){
     char *str_val;
     int size;
@@ -293,8 +316,8 @@ struct DatatypeAndValue* binaryAddition(struct DatatypeAndValue *input_val1, str
 
     if(first_operand==BOOLEAN || second_operand==BOOLEAN){
         printf("[error: %d]  bad operand types for binary operator '+'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     
     else if(first_operand==INTEGER){
@@ -431,8 +454,8 @@ struct DatatypeAndValue* binarySubtraction(struct DatatypeAndValue *input_val1, 
 
     if(first_operand==BOOLEAN || second_operand==BOOLEAN || first_operand==STRING || second_operand==STRING){
         printf("[error: %d]  bad operand types for binary operator '-'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
 
     else if(first_operand==INTEGER){
@@ -521,8 +544,8 @@ struct DatatypeAndValue* binaryMultiplication(struct DatatypeAndValue *input_val
 
     if(first_operand==BOOLEAN || second_operand==BOOLEAN || first_operand==STRING || second_operand==STRING){
         printf("[error: %d]  bad operand types for binary operator '*'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
 
     else if(first_operand==INTEGER){
@@ -611,8 +634,8 @@ struct DatatypeAndValue* binaryDivision(struct DatatypeAndValue *input_val1, str
 
     if(first_operand==BOOLEAN || second_operand==BOOLEAN || first_operand==STRING || second_operand==STRING){
         printf("[error: %d]  bad operand types for binary operator '*'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
 
     else if(first_operand==INTEGER){
@@ -723,8 +746,8 @@ struct DatatypeAndValue* binaryModulo(struct DatatypeAndValue *input_val1, struc
 
     else{
         printf("[error: %d]  bad operand types for binary operator '%'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
 
     
@@ -738,8 +761,8 @@ struct DatatypeAndValue* binaryPower(struct DatatypeAndValue *input_val1, struct
 
     if(first_operand==BOOLEAN || second_operand==BOOLEAN || first_operand==STRING || second_operand==STRING){
         printf("[error: %d]  bad operand types for binary operator '*'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
 
     else if(first_operand==INTEGER){
@@ -833,8 +856,8 @@ struct DatatypeAndValue* binaryRightShift(struct DatatypeAndValue *input_val1, s
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '>>'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -851,8 +874,8 @@ struct DatatypeAndValue* binaryLeftShift(struct DatatypeAndValue *input_val1, st
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '<<'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1000,8 +1023,8 @@ struct DatatypeAndValue* binaryLessThan(struct DatatypeAndValue *input_val1, str
                 break;
             case STRING:
                 printf("[error: %d]  bad operand types for binary operator '%'\n", line);
-                printf("first type: %d\n", first_operand);
-                printf("second type: %d\n", second_operand);
+                printf("first type: %s\n", getDatatype(first_operand));
+                printf("second type: %s\n", getDatatype(second_operand));
                 break;
         }
     }
@@ -1050,8 +1073,8 @@ struct DatatypeAndValue* binaryLessEqual(struct DatatypeAndValue *input_val1, st
                 break;
             case STRING:
                 printf("[error: %d]  bad operand types for binary operator '%'\n", line);
-                printf("first type: %d\n", first_operand);
-                printf("second type: %d\n", second_operand);
+                printf("first type: %s\n", getDatatype(first_operand));
+                printf("second type: %s\n", getDatatype(second_operand));
                 break;
         }
     }
@@ -1100,8 +1123,8 @@ struct DatatypeAndValue* binaryGreaterThan(struct DatatypeAndValue *input_val1, 
                 break;
             case STRING:
                 printf("[error: %d]  bad operand types for binary operator '%'\n", line);
-                printf("first type: %d\n", first_operand);
-                printf("second type: %d\n", second_operand);
+                printf("first type: %s\n", getDatatype(first_operand));
+                printf("second type: %s\n", getDatatype(second_operand));
                 break;
         }
     }
@@ -1150,8 +1173,8 @@ struct DatatypeAndValue* binaryGreaterEqual(struct DatatypeAndValue *input_val1,
                 break;
             case STRING:
                 printf("[error: %d]  bad operand types for binary operator '%'\n", line);
-                printf("first type: %d\n", first_operand);
-                printf("second type: %d\n", second_operand);
+                printf("first type: %s\n", getDatatype(first_operand));
+                printf("second type: %s\n", getDatatype(second_operand));
                 break;
         }
     }
@@ -1187,8 +1210,8 @@ struct DatatypeAndValue* binaryOR(struct DatatypeAndValue *input_val1, struct Da
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '|'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1220,8 +1243,8 @@ struct DatatypeAndValue* binaryXOR(struct DatatypeAndValue *input_val1, struct D
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '^'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1253,8 +1276,8 @@ struct DatatypeAndValue* binaryAND(struct DatatypeAndValue *input_val1, struct D
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '&'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1275,8 +1298,8 @@ struct DatatypeAndValue* logicalOR(struct DatatypeAndValue *input_val1, struct D
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '||'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1297,8 +1320,8 @@ struct DatatypeAndValue* logicalAND(struct DatatypeAndValue *input_val1, struct 
     }
     else{
         printf("[error: %d]  bad operand types for binary operator '&&'\n", line);
-        printf("first type: %d\n", first_operand);
-        printf("second type: %d\n", second_operand);
+        printf("first type: %s\n", getDatatype(first_operand));
+        printf("second type: %s\n", getDatatype(second_operand));
     }
     return input_val1;
 }
@@ -1318,7 +1341,7 @@ struct DatatypeAndValue* unaryIncrement(struct DatatypeAndValue *input_val){
             input_val->value->i_val = input_val->value->c_val+1;
             break;
         default:
-            printf("[error: %d] bad operand type %d for unary operator '++'\n", line, input_val->datatype);
+            printf("[error: %d] bad operand type %s for unary operator '++'\n", line, getDatatype(input_val->datatype));
     }
     return input_val; 
 }
@@ -1338,7 +1361,7 @@ struct DatatypeAndValue* unaryDecrement(struct DatatypeAndValue *input_val){
             input_val->value->i_val = input_val->value->c_val-1;
             break;
         default:
-            printf("[error: %d] bad operand type %d for unary operator '--'\n", line, input_val->datatype);
+            printf("[error: %d] bad operand type %s for unary operator '--'\n", line, getDatatype(input_val->datatype));
     }
     return input_val; 
 }
@@ -1358,7 +1381,7 @@ struct DatatypeAndValue* unaryNegation(struct DatatypeAndValue *input_val){
             input_val->value->i_val = -input_val->value->c_val;
             break;
         default:
-            printf("[error: %d] bad operand type %d for unary operator '-'\n", line, input_val->datatype);
+            printf("[error: %d] bad operand type %s for unary operator '-'\n", line, getDatatype(input_val->datatype));
     }
     return input_val; 
 }
@@ -1370,7 +1393,7 @@ struct DatatypeAndValue* unaryFactorial(struct DatatypeAndValue *input_val){
             input_val->value->i_val *= n;
     }
     else 
-        printf("[error: %d] bad operand type %d for unary operator '**'\n", line, input_val->datatype);
+        printf("[error: %d] bad operand type %s for unary operator '**'\n", line, getDatatype(input_val->datatype));
     return input_val; 
 }
 
@@ -1383,6 +1406,22 @@ struct SymbolTable* getSymbol(char *var_name){
         ptr = ptr->next;
     }
     return NULL;
+}
+
+void unaryIncrementOfID(char *var_name){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        unaryIncrement(required_symbol_node->datatype_and_value);
+}
+
+void unaryDecrementOfID(char *var_name){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        unaryDecrement(required_symbol_node->datatype_and_value);
 }
 
 void assignNewValue(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
@@ -1454,7 +1493,7 @@ void printAll(){
     struct SymbolTable *ptr;
     ptr = origin_of_symbols;
     while(ptr!=NULL){
-        printf("%s %d ", ptr->var_name, ptr->datatype_and_value->datatype);
+        printf("%s %s ", ptr->var_name, getDatatype(ptr->datatype_and_value->datatype));
         switch(ptr->datatype_and_value->datatype){
             case INTEGER:
                 printf("%d\n", ptr->datatype_and_value->value->i_val);
@@ -1485,7 +1524,7 @@ void printAll(){
 void printId(char *symname){
     struct SymbolTable *ptr = getSymbol(symname);
     if(ptr!=NULL){
-        printf("%s %d ", ptr->var_name, ptr->datatype_and_value->datatype);
+        printf("%s %s ", ptr->var_name, getDatatype(ptr->datatype_and_value->datatype));
         switch(ptr->datatype_and_value->datatype){
             case INTEGER:
                 printf("%d\n", ptr->datatype_and_value->value->i_val);
