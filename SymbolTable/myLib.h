@@ -64,7 +64,7 @@ char* toString(struct DatatypeAndValue *datatype_and_value){
     return str_val;
 }
 
-struct DatatypeAndValue* changeUnionValue(struct DatatypeAndValue *new_node, struct DatatypeAndValue *new_symbol){
+void changeUnionValue(struct DatatypeAndValue *new_node, struct DatatypeAndValue *new_symbol){
     int to_datatype = new_node->datatype;
     int from_datatype = new_symbol->datatype;
     if(to_datatype == INTEGER){
@@ -124,8 +124,7 @@ struct DatatypeAndValue* changeUnionValue(struct DatatypeAndValue *new_node, str
         else if(from_datatype == CHARACTER) new_node->value->str_val = toString(new_symbol);
         else if(from_datatype == BOOLEAN) new_node->value->str_val = toString(new_symbol);
         else if(from_datatype == STRING) new_node->value->str_val = strdup(new_symbol->value->str_val);
-    }    
-    return new_node;
+    }
 }
 
 struct SymbolTable* insertInSymbolTable(int datatype, struct SymbolTable *new_symbol){
@@ -160,7 +159,7 @@ struct SymbolTable* insertInSymbolTable(int datatype, struct SymbolTable *new_sy
         }
     }
     else
-        new_node->datatype_and_value = changeUnionValue(new_node->datatype_and_value, new_symbol->datatype_and_value);
+        changeUnionValue(new_node->datatype_and_value, new_symbol->datatype_and_value);
 
     if(origin_of_symbols==NULL){
         origin_of_symbols = new_node;
@@ -1375,6 +1374,82 @@ struct DatatypeAndValue* unaryFactorial(struct DatatypeAndValue *input_val){
     return input_val; 
 }
 
+struct SymbolTable* getSymbol(char *var_name){
+    struct SymbolTable *ptr = (struct SymbolTable*) malloc(sizeof(struct SymbolTable));
+    ptr = origin_of_symbols;
+    while(ptr!=NULL){
+        if(strcmp(ptr->var_name, var_name) == 0) 
+            return ptr;
+        ptr = ptr->next;
+    }
+    return NULL;
+}
+
+void assignNewValue(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        changeUnionValue(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+void assignPlusEqual(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        required_symbol_node->datatype_and_value = binaryAddition(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+void assignMinusEqual(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        required_symbol_node->datatype_and_value = binarySubtraction(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+void assignMultiplicationEqual(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        required_symbol_node->datatype_and_value = binaryMultiplication(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+void assignDivisionEqual(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        required_symbol_node->datatype_and_value = binaryDivision(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+void assignModuloEqual(char *var_name, struct DatatypeAndValue *new_datatype_and_value_node){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL)
+        printf("[error: %d] '%s' not found\n", line, var_name);
+    else
+        required_symbol_node->datatype_and_value = binaryModulo(required_symbol_node->datatype_and_value, new_datatype_and_value_node);
+}
+
+struct DatatypeAndValue* fetchId(char *var_name){
+    struct SymbolTable *required_symbol_node = getSymbol(var_name);
+
+    if(required_symbol_node==NULL){
+        printf("[error: %d] '%s' not found\n", line, var_name);
+        return NULL;
+    }
+    else
+        return required_symbol_node->datatype_and_value;
+}
+
 void printAll(){
     struct SymbolTable *ptr;
     ptr = origin_of_symbols;
@@ -1408,39 +1483,33 @@ void printAll(){
 }
 
 void printId(char *symname){
-    struct SymbolTable *ptr;
-    ptr = (struct SymbolTable*) malloc(sizeof(struct SymbolTable));
-    ptr = origin_of_symbols;
-    while(ptr!=NULL){
-        if(strcmp(ptr->var_name, symname) == 0) {
-          printf("%s %d ", ptr->var_name, ptr->datatype_and_value->datatype);
-            switch(ptr->datatype_and_value->datatype){
-                case INTEGER:
-                    printf("%d\n", ptr->datatype_and_value->value->i_val);
-                    break;
-                case FLOAT:
-                    printf("%f\n", ptr->datatype_and_value->value->f_val);
-                    break;
-                case DOUBLE:
-                    printf("%lf\n", ptr->datatype_and_value->value->d_val);
-                    break;
-                case CHARACTER:
-                    printf("%c\n", ptr->datatype_and_value->value->c_val);
-                    break;
-                case BOOLEAN:
-                    if(ptr->datatype_and_value->value->b_val == '0')
-                        printf("false\n");
-                    else
-                        printf("true\n");
-                    break;
-                case STRING:
-                    printf("%s\n", ptr->datatype_and_value->value->str_val);
-                    break;
-            }
-            return;
+    struct SymbolTable *ptr = getSymbol(symname);
+    if(ptr!=NULL){
+        printf("%s %d ", ptr->var_name, ptr->datatype_and_value->datatype);
+        switch(ptr->datatype_and_value->datatype){
+            case INTEGER:
+                printf("%d\n", ptr->datatype_and_value->value->i_val);
+                break;
+            case FLOAT:
+                printf("%f\n", ptr->datatype_and_value->value->f_val);
+                break;
+            case DOUBLE:
+                printf("%lf\n", ptr->datatype_and_value->value->d_val);
+                break;
+            case CHARACTER:
+                printf("%c\n", ptr->datatype_and_value->value->c_val);
+                break;
+            case BOOLEAN:
+                if(ptr->datatype_and_value->value->b_val == '0')
+                    printf("false\n");
+                else
+                    printf("true\n");
+                break;
+            case STRING:
+                printf("%s\n", ptr->datatype_and_value->value->str_val);
+                break;
         }
-        ptr = ptr->next;
     }
-    if(ptr==NULL)
+    else
       printf("Symbol not found\n");
 }

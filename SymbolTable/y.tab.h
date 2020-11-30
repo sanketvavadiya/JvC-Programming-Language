@@ -153,7 +153,7 @@ typedef union YYSTYPE
 	char b_val;
 	char* str_val;
 	char *sym_name;
-	struct DatatypeAndValue* value_node;
+	struct DatatypeAndValue* datatype_and_value_node;
 	struct SymbolTable *symbol_table;
 
 

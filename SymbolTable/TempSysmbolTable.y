@@ -21,7 +21,7 @@
 	char b_val;
 	char* str_val;
 	char *sym_name;
-	struct DatatypeAndValue* value_node;
+	struct DatatypeAndValue* datatype_and_value_node;
 	struct SymbolTable *symbol_table;
 }
 
@@ -41,7 +41,7 @@
 %token newline print comma
 %token true false
 
-%type <value_node> VALUE ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY
+%type <datatype_and_value_node> VALUE VALUE_or_ID ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY
 %type <symbol_table> ID LIST DECLARATION
 %type <c_val> BOOLEAN_VAL
 %type <i_val> DATATYPE
@@ -53,6 +53,7 @@ SS : SS S | S ;
 S : E newline {line++;};
 
 E : DECLARATION 
+  | ASSIGNMENTSTATEMENT
   | print       {printAll();}
   | print id  	{printId($2);}
   ;
@@ -72,6 +73,14 @@ LIST : ID 				{$$ = $1;}
 
 ID : id 		  {$$ = makeSymbolNodeWithoutDatatype($1, NULL);}
    | id equal TERNARY {$$ = makeSymbolNodeWithoutDatatype($1, $3);}
+
+ASSIGNMENTSTATEMENT : id equal TERNARY {assignNewValue($1, $3);}
+					| id plus equal TERNARY {assignPlusEqual($1, $4);}
+					| id minus equal TERNARY {assignMinusEqual($1, $4);}
+					| id multiplication equal TERNARY {assignMultiplicationEqual($1, $4);}
+					| id division equal TERNARY {assignDivisionEqual($1, $4);}
+					| id modulo equal TERNARY {assignModuloEqual($1, $4);}
+					;
 
 TERNARY : LOGICAL questionmark LOGICAL colon LOGICAL {$$ = ternary($1, $3, $5);}
         | LOGICAL                                     {$$ = $1;}
@@ -112,23 +121,26 @@ ARITHMETIC_EX : ARITHMETIC_EX minus ARITHMETIC_1        {$$ = binarySubtraction(
 ARITHMETIC_1 : ARITHMETIC_1 multiplication ARITHMETIC_2     {$$ = binaryMultiplication($1, $3);}
              | ARITHMETIC_1 division ARITHMETIC_2           {$$ = binaryDivision($1, $3);}
              | ARITHMETIC_1 modulo ARITHMETIC_2             {$$ = binaryModulo($1, $3);}
-             | plus VALUE                                   {$$ = $2;}
-             | minus VALUE                                  {$$ = unaryNegation($2);}
-             | increment VALUE                              {$$ = unaryIncrement($2);}
-             | decrement VALUE                              {$$ = unaryDecrement($2);}
+             | plus VALUE_or_ID                                   {$$ = $2;}
+             | minus VALUE_or_ID                                  {$$ = unaryNegation($2);}
+             | increment VALUE_or_ID                              {$$ = unaryIncrement($2);}
+             | decrement VALUE_or_ID                              {$$ = unaryDecrement($2);}
              | ARITHMETIC_2                                 {$$ = $1;}
              ;
 
 ARITHMETIC_2 : ARITHMETIC_2 exclamation     {$$ = unaryFactorial($1);}
              | BRACKETS pow1 ARITHMETIC_2    {$$ = binaryPower($1, $3);}
-             | VALUE increment              {$$ = unaryIncrement($1);}
-             | VALUE decrement              {$$ = unaryDecrement($1);}
+             | VALUE_or_ID increment              {$$ = unaryIncrement($1);}
+             | VALUE_or_ID decrement              {$$ = unaryDecrement($1);}
              | BRACKETS                     {$$ = $1;}
              ;
 
 BRACKETS : openbracket TERNARY closebracket         {$$ = $2;}
-         | VALUE                                {$$ = $1;}
+         | VALUE_or_ID                                {$$ = $1;}
          ;             
+
+VALUE_or_ID : id 		{$$ = fetchId($1);}
+			| VALUE     {$$ = $1;}
 
 VALUE : intval	{union Value *input_value = (union Value*) malloc(sizeof(union Value)); 
 				input_value->i_val = $1; 
