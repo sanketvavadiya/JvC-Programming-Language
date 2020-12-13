@@ -110,7 +110,8 @@ RELATIONAL_EXP_1 : RELATIONAL_EXP_1 gteq RELATIONAL_EXP_2   {$$ = binaryGreaterE
 
 RELATIONAL_EXP_2 : RELATIONAL_EXP_2 eqeq SHIFTS     {$$ = binaryEquals($1, $3);}
                  | RELATIONAL_EXP_2 noteq SHIFTS    {$$ = binaryNotEquals($1, $3);}
-                 | SHIFTS   
+                 | SHIFTS
+                 ;
 
 SHIFTS : SHIFTS rightshift ARITHMETIC_EX       {$$ = binaryRightShift($1, $3);}
        | SHIFTS leftshift ARITHMETIC_EX        {$$ = binaryLeftShift($1, $3);}
@@ -145,6 +146,7 @@ BRACKETS : openbracket TERNARY closebracket         {$$ = $2;}
 
 VALUE_or_ID : id 		{$$ = fetchId($1);}
 			| VALUE     {$$ = $1;}
+			;
 
 VALUE : intval	{union Value *input_value = (union Value*) malloc(sizeof(union Value)); 
 				input_value->i_val = $1; 

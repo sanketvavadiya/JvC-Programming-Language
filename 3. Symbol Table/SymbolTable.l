@@ -9,7 +9,7 @@ int 		{digit}+
 float		{digit}*"."{digit}{1,7}
 double 		{digit}*"."{digit}{8,}
 char		"'"[a-zA-Z0-9_]"'"
-string		"\""[a-zA-Z0-9_]+"\""
+string		["][^"]*["]
 
 identifier	[a-zA-Z_][a-zA-Z0-9_]*
 %%
