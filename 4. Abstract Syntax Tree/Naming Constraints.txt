@@ -1,4 +1,4 @@
-structure/union--> 		PascalCase
-variables-->			snake_case
-terminals symbol--> 	allsame
-functions--> 			camelCase
+structure/union		--> 	PascalCase
+variables			-->		snake_case
+terminals symbol	-->		lazycase
+functions			--> 	camelCase
