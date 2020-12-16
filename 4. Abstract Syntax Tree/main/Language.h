@@ -52,6 +52,7 @@ DeclarationExpression* makeDeclarationNode(int datatype, DeclarationList *declar
 }
 
 void* makeIfStatementNode(void *input1, void *input2, int input){
+        // only if statement
         if(input==1){
             IfStatement *res = (IfStatement*) malloc(sizeof(IfStatement));
             res->test = (Expression*)input1;
@@ -61,6 +62,7 @@ void* makeIfStatementNode(void *input1, void *input2, int input){
             res->location->line = line;
             return res;
         }
+        // if with else
         if(input==2){
             IfStatement *res = (IfStatement*)input1;
             res->alternate = (Statement*)input2;
@@ -68,20 +70,55 @@ void* makeIfStatementNode(void *input1, void *input2, int input){
             res->location->line = line;
             return res;
         }
+        // else if with else
         if(input==3){
             Statement *res = (Statement*) malloc(sizeof(Statement));
             res->type = IFSTATEMENT;
+            res->next = NULL;            
             if(input1!=NULL){
+                Statement *dummy = (Statement*) malloc(sizeof(StatementType));
+                IfStatement *ptr = (IfStatement*)input1;
+                while(ptr->alternate!=NULL)
+                    ptr = ptr->alternate->statement_type->if_statement;
+                ptr->alternate = (Statement*)input2;
+                dummy->statement_type = (StatementType*) malloc(sizeof(StatementType));
+                dummy->statement_type->if_statement = ptr;
+                dummy->location = (Location*) malloc(sizeof(Location));
+                dummy->location->line = line;
+
+                // dummy is pointing to last else if statement res will point to first else if
                 res->statement_type = (StatementType*) malloc(sizeof(StatementType));
-                res->statement_type->if_statement = (IfStatement*)input1;                
-                res->statement_type->if_statement->alternate = (Statement*)input2;
+                res->statement_type->if_statement = (IfStatement*) input1;
                 res->location = (Location*) malloc(sizeof(Location));
                 res->location->line = line;
             }
             else
-                res = (Expression*)input2;
+                res = (Statement*)input2;
             return res;
         }
+}
+
+IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statement *consequent){
+    IfStatement *res = (IfStatement*) malloc(sizeof(IfStatement));
+    res->test = test;
+    res->consequent = consequent;
+    res->alternate = NULL;
+    
+    // if else if statement is followed by another else if then new else if statement is in alternate part of prev else if statement
+    if(prev!=NULL){
+        IfStatement *ptr = prev;
+        while(ptr->alternate!=NULL)
+            ptr = ptr->alternate->statement_type->if_statement;
+        ptr->alternate = (Statement*) malloc(sizeof(Statement));
+        ptr->alternate->type = IFSTATEMENT;
+        ptr->alternate->statement_type = (StatementType*) malloc(sizeof(StatementType));
+        ptr->alternate->statement_type->if_statement = res;
+        ptr->alternate->next = NULL;
+
+        // always returns first else if statement of/among all the else if statement
+        return prev;
+    }
+    return res;
 }
 
 Expression* makeBinaryExpressionNode(Expression *left, char *operator, Expression *right){
@@ -233,11 +270,11 @@ void printIfStatementNode(IfStatement *if_statement, int indent){
     printIndent(indent+1);
     printf("consequent: \n");
     printStatementNode(if_statement->consequent, indent+2);
-    if(if_statement->alternate!=NULL){
+    // if(if_statement->alternate!=NULL){
         printIndent(indent+1);
         printf("alternate: \n");
         printStatementNode(if_statement->alternate, indent+2);
-    }
+    // }
 }
 
 void printAssignmentNode(AssignmentExpression *assignment_expression, int indent){

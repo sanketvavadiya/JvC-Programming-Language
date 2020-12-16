@@ -60,7 +60,7 @@ PROGRAM : STATEMENT_SET
 STATEMENT_SET : /* epsilon */                     	 {$$ = NULL;}
               | STATEMENT_SET EXPRESSION_ST newline  {$$ = makeStatementNode(EXPRESSION, $2, $1); line++;}
               | EXPRESSION_ST newline 				 {$$ = makeStatementNode(EXPRESSION, $1, NULL); line++;}
-              | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementNode(IFSTATEMENT, $2, $1);}
+              | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementNode(IFSTATEMENT, $2, $1); printStatementNode($$, 0);}
               | OPTIONAL_NEWLINE STATEMENT_SET    	 {$$ = NULL;}
               ;
 
@@ -72,7 +72,7 @@ EXPRESSION_ST : ASSIGNMENT_EXP   {$$ = makeExpressionStatementNode(ASSIGNMENT, $
               | DECLARATION_EXP  {$$ = makeExpressionStatementNode(DECLARATION, $1);}
               ;
 
-IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); printStatementNode($$, 0);}
+IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); /*printIfStatementNode($$, 0);*/}
 			 ;
 
 IF_BLOCK : ifkeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE			
@@ -85,10 +85,10 @@ OPTIONAL_BLOCKS : ELIF_BLOCKS ELSE_BLOCK {$$ = makeIfStatementNode($1, $2, 3);}
 				;
 
 ELIF_BLOCKS : /* epsilon */ {$$ = NULL;}
-			| elifkeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE
+			| ELIF_BLOCKS elifkeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE
               opencurly OPTIONAL_NEWLINE
               	STATEMENT_SET
-              closecurly OPTIONAL_NEWLINE ELIF_BLOCKS {$8 = reverseStatements($8); $$ = makeIfStatementNode($3, $8, 1);}
+              closecurly OPTIONAL_NEWLINE  {$9 = reverseStatements($9); $$ = makeElseifStatementNode($1, $4, $9);}
            ;
 
 ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
