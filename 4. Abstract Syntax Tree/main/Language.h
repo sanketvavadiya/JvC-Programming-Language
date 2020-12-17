@@ -103,7 +103,9 @@ IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statem
     res->test = test;
     res->consequent = consequent;
     res->alternate = NULL;
-    
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
+
     // if else if statement is followed by another else if then new else if statement is in alternate part of prev else if statement
     if(prev!=NULL){
         IfStatement *ptr = prev;
@@ -118,6 +120,15 @@ IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statem
         // always returns first else if statement of/among all the else if statement
         return prev;
     }
+    return res;
+}
+
+WhileStatement* makeWhileStatementNode(Expression *test, Statement *body){
+    WhileStatement *res = (WhileStatement*) malloc(sizeof(WhileStatement));
+    res->test = test;
+    res->body = body;
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
     return res;
 }
 
@@ -208,9 +219,13 @@ Statement* makeStatementNode(int type, void *statement_type, Statement *next){
         case IFSTATEMENT:
             res->statement_type->if_statement = (IfStatement*)statement_type;
             break;
+        case WHILESTATEMENT:
+            res->statement_type->while_statement = (WhileStatement*)statement_type;
+            break;
     }
     res->location = (Location*) malloc(sizeof(Location));
     res->location->line = line;
+    
     // we are inserting every node in the front, so in the last we need to reverse the entire linked list
     res->next = next;    
     return res;
@@ -242,6 +257,8 @@ void printStatementNode(Statement *statement, int indent){
                 case IFSTATEMENT:
                     printIfStatementNode(this_statement->statement_type->if_statement, indent);
                     break;
+                case WHILESTATEMENT:
+                    printWhileStatementNode(this_statement->statement_type->while_statement, indent);
             }
             this_statement = this_statement->next;
         }
@@ -270,11 +287,20 @@ void printIfStatementNode(IfStatement *if_statement, int indent){
     printIndent(indent+1);
     printf("consequent: \n");
     printStatementNode(if_statement->consequent, indent+2);
-    // if(if_statement->alternate!=NULL){
-        printIndent(indent+1);
-        printf("alternate: \n");
-        printStatementNode(if_statement->alternate, indent+2);
-    // }
+    printIndent(indent+1);
+    printf("alternate: \n");
+    printStatementNode(if_statement->alternate, indent+2);
+}
+
+void printWhileStatementNode(WhileStatement *while_statement, int indent){
+    printIndent(indent);
+    printf("WhileStatement\n");
+    printIndent(indent+1);
+    printf("test: \n");
+    printExpression(while_statement->test, indent+2);
+    printIndent(indent+1);
+    printf("body: \n");
+    printStatementNode(while_statement->body, indent+2);
 }
 
 void printAssignmentNode(AssignmentExpression *assignment_expression, int indent){
@@ -327,7 +353,7 @@ void printExpression(Expression *expression, int indent){
             printf("identifier: %s\n", expression->expression_type->identifier);
             break;
         case NUMERIC:
-            printValueNode(expression->expression_type->value_node, indent+1);
+            printValueNode(expression->expression_type->value_node, indent);
             break;
         case BINARYEXP:
             printBinaryExpressionNode(expression->expression_type->binary_expression, indent+1);

@@ -21,6 +21,7 @@
   struct ExpressionStatement *expression_statement;
   struct DeclarationList *declaration_list;
   struct IfStatement *if_statement;
+  struct WhileStatement *while_statement;
   struct Statement *statement;
 }
 
@@ -48,6 +49,7 @@
 %type <assignment_expression> ASSIGNMENT_EXP
 %type <declaration_expression> DECLARATION_EXP
 %type <if_statement> IF_CONSTRUCT IF_BLOCK ELIF_BLOCKS
+%type <while_statement> WHILE_LOOP
 %type <expression_statement> EXPRESSION_ST
 %type <declaration_list> ID LIST
 %type <statement> STATEMENT_SET OPTIONAL_BLOCKS ELSE_BLOCK
@@ -61,6 +63,7 @@ STATEMENT_SET : /* epsilon */                     	 {$$ = NULL;}
               | STATEMENT_SET EXPRESSION_ST newline  {$$ = makeStatementNode(EXPRESSION, $2, $1); line++;}
               | EXPRESSION_ST newline 				 {$$ = makeStatementNode(EXPRESSION, $1, NULL); line++;}
               | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementNode(IFSTATEMENT, $2, $1); printStatementNode($$, 0);}
+              | STATEMENT_SET WHILE_LOOP 			 {$$ = makeStatementNode(WHILESTATEMENT, $2, $1); printStatementNode($$, 0);}
               | OPTIONAL_NEWLINE STATEMENT_SET    	 {$$ = NULL;}
               ;
 
@@ -97,6 +100,12 @@ ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
 			 	STATEMENT_SET
 			 closecurly newline {$$ = reverseStatements($5);}
 		   ;
+
+WHILE_LOOP : whilekeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE
+			 opencurly OPTIONAL_NEWLINE
+			 	STATEMENT_SET
+			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8);}
+			;
 
 DECLARATION_EXP : DATATYPE LIST {$$ = makeDeclarationNode($1, $2);}
 

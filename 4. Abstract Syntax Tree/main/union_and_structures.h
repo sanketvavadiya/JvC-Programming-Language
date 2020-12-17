@@ -92,11 +92,17 @@ typedef struct IfStatement{
     struct Statement *alternate;
 }IfStatement;
 
+typedef struct WhileStatement{
+    Expression *test;
+    Location *location;
+    struct Statement *body;
+}WhileStatement;
+
 typedef union StatementType{
     ExpressionStatement *expression_statement;
     // print
     IfStatement *if_statement;
-    // for, while
+    WhileStatement *while_statement;
 }StatementType;
 
 typedef struct Statement{
