@@ -209,6 +209,17 @@ WhileStatement* makeWhileStatementNode(ExpressionStatement *test, Statement *bod
     return res;
 }
 
+ForStatement* makeForStatementNode(Statement *init, Statement *test, Statement *update, StatementSet *body){
+    ForStatement *res = (ForStatement*) malloc(sizeof(ForStatement));
+    res->init = init;
+    res->test = test;
+    res->update = update;
+    res->body = body;
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
+    return res;
+}
+
 StatementSet* makeStatementSetNode(int type, void *statement_set_type, StatementSet *next){
     StatementSet *res = (StatementSet*) malloc(sizeof(StatementSet));
     res->type = type;
@@ -264,6 +275,9 @@ void printStatementSetNode(StatementSet *statement_set, int indent){
                 case WHILESTATEMENT:
                     printWhileStatementNode(this_statement->statement_set_type->while_statement, indent);
                     break;
+                case FORSTATEMENT:
+                    printForStatementNode(this_statement->statement_set_type->for_statement, indent);
+                    break;
             }
             this_statement = this_statement->next;
         }
@@ -309,6 +323,29 @@ void printWhileStatementNode(WhileStatement *while_statement, int indent){
     printIndent(indent+1);
     printf("body: \n");
     printStatementSetNode(while_statement->body, indent+2);
+}
+
+void printForStatementNode(ForStatement *for_statement, int indent){
+    printIndent(indent);
+    printf("ForStatement\n");
+    if(for_statement->init!=NULL){
+        printIndent(indent+1);
+        printf("init: \n");
+        printStatementNode(for_statement->init, indent+2);
+    }
+    if(for_statement->test!=NULL){
+        printIndent(indent+1);
+        printf("test: \n");
+        printStatementNode(for_statement->test, indent+2);
+    }
+    if(for_statement->update!=NULL){
+        printIndent(indent+1);
+        printf("update: \n");
+        printStatementNode(for_statement->update, indent+2);
+    }
+    printIndent(indent+1);
+    printf("body: \n");
+    printStatementSetNode(for_statement->body, indent+2);
 }
 
 void printAssignmentStatementNode(AssignmentStatement *assignment_statement, int indent){

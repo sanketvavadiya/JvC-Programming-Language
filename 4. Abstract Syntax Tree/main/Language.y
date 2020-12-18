@@ -50,9 +50,10 @@
 %type <declaration_list> ID LIST
 %type <declaration_statement> DECLARATION_ST
 %type <assignment_statement> ASSIGNMENT_ST
-%type <statement> STATEMENTS
+%type <statement> STATEMENTS EXP_ASGN_ST_EPS EXP_ASGN_ST
 %type <if_statement> IF_CONSTRUCT IF_BLOCK ELIF_BLOCKS
 %type <while_statement> WHILE_LOOP
+%type <for_statement> FOR_LOOP
 %type <statement_set> STATEMENT_SET OPTIONAL_BLOCKS ELSE_BLOCK
 
 %%
@@ -64,6 +65,7 @@ STATEMENT_SET : /* epsilon */                     	 {$$ = NULL;}
 			  | STATEMENT_SET STATEMENTS newline 	{$$ = makeStatementSetNode(STATEMENT, $2, $1); /*printStatementSetNode($$, 0);*/}
               | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementSetNode(IFSTATEMENT, $2, $1); printStatementSetNode($$, 0);}
               | STATEMENT_SET WHILE_LOOP 			 {$$ = makeStatementSetNode(WHILESTATEMENT, $2, $1); printStatementSetNode($$, 0);}
+              | STATEMENT_SET FOR_LOOP			{$$ = makeStatementSetNode(FORSTATEMENT, $2, $1); printStatementSetNode($$, 0);}
               ;
 
 OPTIONAL_NEWLINE : /* epsilon */
@@ -90,6 +92,7 @@ DATATYPE : intdt      {$$ = INTEGER;}
 
 LIST : ID         	  {$$ = $1;}
      | ID comma LIST  {$1->next=$3; $$ = $1;}
+     ;
 
 ID : id       		  {$$ = makeDeclarationListNode($1, NULL);}
    | id equal EXPRESSION_ST {$$ = makeDeclarationListNode($1, $3);}
@@ -101,12 +104,12 @@ ASSIGNMENT_ST : id equal EXPRESSION_ST 				{$$ = makeAssignmentStatementNode($1,
               | id multiplication equal EXPRESSION_ST {$$ = makeAssignmentStatementNode($1, "*=", $4);}
               | id division equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "/=", $4);}
               | id modulo equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "%=", $4);}
-              ;		   
+              ;
 
 IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); /*printIfStatementNode($$, 0);*/}
 			 ;
 
-IF_BLOCK : ifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE			
+IF_BLOCK : ifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
 		   opencurly OPTIONAL_NEWLINE
 		   	STATEMENT_SET
 		   closecurly OPTIONAL_NEWLINE {$8 = reverseStatements($8); $$ = makeIfStatementNode($3, $8, 1);}
@@ -134,6 +137,23 @@ WHILE_LOOP : whilekeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLIN
 			 	STATEMENT_SET
 			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8);}
 			;
+
+FOR_LOOP : forkeyword openbracket EXP_ASGN_ST_EPS semicolon EXP_ASGN_ST semicolon EXP_ASGN_ST closebracket OPTIONAL_NEWLINE
+			opencurly OPTIONAL_NEWLINE
+				STATEMENT_SET
+			closecurly newline {$12 = reverseStatements($12); $$ = makeForStatementNode($3, $5, $7, $12);}
+		 ;
+
+EXP_ASGN_ST_EPS : /* epsilon */ 	{$$ = NULL;}
+				| EXPRESSION_ST				{$$ = makeStatementNode($1, EXPRESSION);}
+				| DECLARATION_ST 			{$$ = makeStatementNode($1, DECLARATION);}
+				| ASSIGNMENT_ST 				{$$ = makeStatementNode($1, ASSIGNMENT);}
+				;
+
+EXP_ASGN_ST : /* epsilon */	{$$ = NULL;}
+		    | EXPRESSION_ST {$$ = makeStatementNode($1, EXPRESSION);}
+		    | ASSIGNMENT_ST {$$ = makeStatementNode($1, ASSIGNMENT);}
+		    ;
 
 TERNARY : LOGICAL questionmark LOGICAL colon LOGICAL {$$ = makeTernaryExpressionNode($1, $3, $5);}
         | LOGICAL                                    {$$ = $1;}
