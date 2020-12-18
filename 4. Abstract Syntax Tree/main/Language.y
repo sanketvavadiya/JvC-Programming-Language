@@ -15,14 +15,15 @@
   char* str_val;
   char *identifier;
   struct ValueNode *value_node;
-  struct Expression *expression;
-  struct AssignmentExpression *assignment_expression;
-  struct DeclarationExpression *declaration_expression;
-  struct ExpressionStatement *expression_statement;
   struct DeclarationList *declaration_list;
+  struct ExpressionStatement *expression_statement;
+  struct DeclarationStatement *declaration_statement;
+  struct AssignmentStatement *assignment_statement;
+  struct Statement *statement;
   struct IfStatement *if_statement;
   struct WhileStatement *while_statement;
-  struct Statement *statement;
+  struct ForStatement *for_statement;
+  struct StatementSet *statement_set;
 }
 
 %token<i_val> intval
@@ -38,21 +39,21 @@
 %token equal openbracket closebracket opencurly closecurly
 %token gteq gt lt lteq eqeq noteq
 %token questionmark colon leftshift rightshift and or xor
-%token newline print comma end
+%token newline print comma end semicolon
 %token true false
 %token mainkeyword returnkeyword ifkeyword elifkeyword elsekeyword forkeyword whilekeyword continuekeyword switchkeyword casekeyword breakkeyword defaultkeyword
 
 %type <c_val> BOOLEAN_VAL
 %type <i_val> DATATYPE
 %type <value_node> VALUE
-%type <expression> VALUE_or_ID ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY
-%type <assignment_expression> ASSIGNMENT_EXP
-%type <declaration_expression> DECLARATION_EXP
+%type <expression_statement> VALUE_or_ID ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY EXPRESSION_ST
+%type <declaration_list> ID LIST
+%type <declaration_statement> DECLARATION_ST
+%type <assignment_statement> ASSIGNMENT_ST
+%type <statement> STATEMENTS
 %type <if_statement> IF_CONSTRUCT IF_BLOCK ELIF_BLOCKS
 %type <while_statement> WHILE_LOOP
-%type <expression_statement> EXPRESSION_ST
-%type <declaration_list> ID LIST
-%type <statement> STATEMENT_SET OPTIONAL_BLOCKS ELSE_BLOCK
+%type <statement_set> STATEMENT_SET OPTIONAL_BLOCKS ELSE_BLOCK
 
 %%
 
@@ -60,54 +61,24 @@ PROGRAM : STATEMENT_SET
 		;
 
 STATEMENT_SET : /* epsilon */                     	 {$$ = NULL;}
-              | STATEMENT_SET EXPRESSION_ST newline  {$$ = makeStatementNode(EXPRESSION, $2, $1); line++;}
-              | EXPRESSION_ST newline 				 {$$ = makeStatementNode(EXPRESSION, $1, NULL); line++;}
-              | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementNode(IFSTATEMENT, $2, $1); printStatementNode($$, 0);}
-              | STATEMENT_SET WHILE_LOOP 			 {$$ = makeStatementNode(WHILESTATEMENT, $2, $1); printStatementNode($$, 0);}
-              | OPTIONAL_NEWLINE STATEMENT_SET    	 {$$ = NULL;}
+			  | STATEMENT_SET STATEMENTS newline 	{$$ = makeStatementSetNode(STATEMENT, $2, $1); /*printStatementSetNode($$, 0);*/}
+              | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementSetNode(IFSTATEMENT, $2, $1); printStatementSetNode($$, 0);}
+              | STATEMENT_SET WHILE_LOOP 			 {$$ = makeStatementSetNode(WHILESTATEMENT, $2, $1); printStatementSetNode($$, 0);}
               ;
 
 OPTIONAL_NEWLINE : /* epsilon */
                  | OPTIONAL_NEWLINE newline {line++;}
                  ;
 
-EXPRESSION_ST : ASSIGNMENT_EXP   {$$ = makeExpressionStatementNode(ASSIGNMENT, $1);}
-              | DECLARATION_EXP  {$$ = makeExpressionStatementNode(DECLARATION, $1);}
-              ;
-
-IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); /*printIfStatementNode($$, 0);*/}
-			 ;
-
-IF_BLOCK : ifkeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE			
-		   opencurly OPTIONAL_NEWLINE
-		   	STATEMENT_SET
-		   closecurly OPTIONAL_NEWLINE {$8 = reverseStatements($8); $$ = makeIfStatementNode($3, $8, 1);}
-		 ;
-
-OPTIONAL_BLOCKS : ELIF_BLOCKS ELSE_BLOCK {$$ = makeIfStatementNode($1, $2, 3);}
-				;
-
-ELIF_BLOCKS : /* epsilon */ {$$ = NULL;}
-			| ELIF_BLOCKS elifkeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE
-              opencurly OPTIONAL_NEWLINE
-              	STATEMENT_SET
-              closecurly OPTIONAL_NEWLINE  {$9 = reverseStatements($9); $$ = makeElseifStatementNode($1, $4, $9);}
-           ;
-
-ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
-		   | elsekeyword OPTIONAL_NEWLINE
-			 opencurly OPTIONAL_NEWLINE
-			 	STATEMENT_SET
-			 closecurly newline {$$ = reverseStatements($5);}
+STATEMENTS : EXPRESSION_ST				{$$ = makeStatementNode($1, EXPRESSION);}
+		   | DECLARATION_ST 			{$$ = makeStatementNode($1, DECLARATION);}
+		   | ASSIGNMENT_ST 				{$$ = makeStatementNode($1, ASSIGNMENT);}
 		   ;
 
-WHILE_LOOP : whilekeyword openbracket TERNARY closebracket OPTIONAL_NEWLINE
-			 opencurly OPTIONAL_NEWLINE
-			 	STATEMENT_SET
-			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8);}
-			;
+EXPRESSION_ST : TERNARY {$$ = $1;}
+			  ;
 
-DECLARATION_EXP : DATATYPE LIST {$$ = makeDeclarationNode($1, $2);}
+DECLARATION_ST : DATATYPE LIST {$$ = makeDeclarationStatementNode($1, $2);}
 
 DATATYPE : intdt      {$$ = INTEGER;}
          | floatdt    {$$ = FLOAT;}
@@ -121,15 +92,48 @@ LIST : ID         	  {$$ = $1;}
      | ID comma LIST  {$1->next=$3; $$ = $1;}
 
 ID : id       		  {$$ = makeDeclarationListNode($1, NULL);}
-   | id equal TERNARY {$$ = makeDeclarationListNode($1, $3);}              
+   | id equal EXPRESSION_ST {$$ = makeDeclarationListNode($1, $3);}
+   ;
 
-ASSIGNMENT_EXP : id equal TERNARY 				{$$ = makeAssignmentNode($1, "=", $3);}
-              | id plus equal TERNARY 			{$$ = makeAssignmentNode($1, "+=", $4);}
-              | id minus equal TERNARY 			{$$ = makeAssignmentNode($1, "-=", $4);}
-              | id multiplication equal TERNARY {$$ = makeAssignmentNode($1, "*=", $4);}
-              | id division equal TERNARY 		{$$ = makeAssignmentNode($1, "/=", $4);}
-              | id modulo equal TERNARY 		{$$ = makeAssignmentNode($1, "%=", $4);}
-              ;
+ASSIGNMENT_ST : id equal EXPRESSION_ST 				{$$ = makeAssignmentStatementNode($1, "=", $3);}
+              | id plus equal EXPRESSION_ST 			{$$ = makeAssignmentStatementNode($1, "+=", $4);}
+              | id minus equal EXPRESSION_ST 			{$$ = makeAssignmentStatementNode($1, "-=", $4);}
+              | id multiplication equal EXPRESSION_ST {$$ = makeAssignmentStatementNode($1, "*=", $4);}
+              | id division equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "/=", $4);}
+              | id modulo equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "%=", $4);}
+              ;		   
+
+IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); /*printIfStatementNode($$, 0);*/}
+			 ;
+
+IF_BLOCK : ifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE			
+		   opencurly OPTIONAL_NEWLINE
+		   	STATEMENT_SET
+		   closecurly OPTIONAL_NEWLINE {$8 = reverseStatements($8); $$ = makeIfStatementNode($3, $8, 1);}
+		 ;
+
+OPTIONAL_BLOCKS : ELIF_BLOCKS ELSE_BLOCK {$$ = makeIfStatementNode($1, $2, 3);}
+				;
+
+ELIF_BLOCKS : /* epsilon */ {$$ = NULL;}
+			| ELIF_BLOCKS elifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
+              opencurly OPTIONAL_NEWLINE
+              	STATEMENT_SET
+              closecurly OPTIONAL_NEWLINE  {$9 = reverseStatements($9); $$ = makeElseifStatementNode($1, $4, $9);}
+           ;
+
+ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
+		   | elsekeyword OPTIONAL_NEWLINE
+			 opencurly OPTIONAL_NEWLINE
+			 	STATEMENT_SET
+			 closecurly newline {$$ = reverseStatements($5);}
+		   ;
+
+WHILE_LOOP : whilekeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
+			 opencurly OPTIONAL_NEWLINE
+			 	STATEMENT_SET
+			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8);}
+			;
 
 TERNARY : LOGICAL questionmark LOGICAL colon LOGICAL {$$ = makeTernaryExpressionNode($1, $3, $5);}
         | LOGICAL                                    {$$ = $1;}
@@ -189,8 +193,8 @@ BRACKETS : openbracket ARITHMETIC_EX closebracket     {$$ = $2;}
          | VALUE_or_ID                                {$$ = $1;}
          ;
 
-VALUE_or_ID : id        {$$ = makeExpressionNode($1, NULL);}
-            | VALUE     {$$ = makeExpressionNode(NULL, $1);}
+VALUE_or_ID : id        {$$ = makeExpressionStatementNode($1, NULL);}
+            | VALUE     {$$ = makeExpressionStatementNode(NULL, $1);}
             ;
 
 VALUE : intval  { Value *input_value = (Value*) malloc(sizeof(Value)); 

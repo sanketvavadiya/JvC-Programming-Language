@@ -23,91 +23,99 @@ typedef struct ValueNode{
     Value *value;
 }ValueNode;
 
-typedef union ExpressionType{
-    char *identifier;
-    ValueNode *value_node;
-    struct UnaryExpression *unary_expression;
-    struct BinaryExpression *binary_expression;
-    struct TernaryExpression *ternary_expression;
-}ExpressionType;
-
-typedef struct Expression{
-    int type;
-    Location *location;
-    ExpressionType *expression_type;   
-}Expression;
-
-typedef struct AssignmentExpression{
-    char *operator;
-    char *left;
-    Location *location;
-    Expression *right;
-}AssignmentExpression;
-
-typedef struct DeclarationExpression{
-    int datatype;
-    Location *location;
-    struct DeclarationList *declaration_list;
-}DeclarationExpression;
-
 typedef struct UnaryExpression{
     char prefix;
     char *operator;
-    Expression *expression;
+    struct ExpressionStatement *expression_statement;
     Location *location;
 }UnaryExpression;
 
 typedef struct BinaryExpression{
     char *operator;
     Location *location;
-    Expression *left, *right;  
+    struct ExpressionStatement *left, *right;  
 }BinaryExpression;
 
 typedef struct TernaryExpression{
     Location *location;
-    Expression *test, *consequent, *alternate;
+    struct ExpressionStatement *test, *consequent, *alternate;
 }TernaryExpression;
 
-typedef struct DeclarationList{
+typedef union ExpressionType{
     char *identifier;
-    Expression *init;
-    struct DeclarationList *next;
-}DeclarationList;
-
-typedef union ExpressionStatementType{
-    AssignmentExpression *assignment_expression;
-    DeclarationExpression *declaration_expression;
-}ExpressionStatementType;
+    ValueNode *value_node;
+    UnaryExpression *unary_expression;
+    BinaryExpression *binary_expression;
+    TernaryExpression *ternary_expression;
+}ExpressionType;
 
 typedef struct ExpressionStatement{
     int type;
     Location *location;
-    ExpressionStatementType *expression_statement_type;
+    ExpressionType *expression_type;   
 }ExpressionStatement;
 
-typedef struct IfStatement{
-    Expression *test;
-    Location *location;
-    struct Statement *consequent;
-    struct Statement *alternate;
-}IfStatement;
+typedef struct DeclarationList{
+    char *identifier;
+    ExpressionStatement *init;
+    struct DeclarationList *next;
+}DeclarationList;
 
-typedef struct WhileStatement{
-    Expression *test;
+typedef struct DeclarationStatement{
+    int datatype;
     Location *location;
-    struct Statement *body;
-}WhileStatement;
+    struct DeclarationList *declaration_list;
+}DeclarationStatement;
+
+typedef struct AssignmentStatement{
+    char *operator;
+    char *left;
+    Location *location;
+    ExpressionStatement *right;
+}AssignmentStatement;
 
 typedef union StatementType{
     ExpressionStatement *expression_statement;
-    // print
-    IfStatement *if_statement;
-    WhileStatement *while_statement;
+    DeclarationStatement *declaration_statement;
+    AssignmentStatement *assignment_statement;
 }StatementType;
 
 typedef struct Statement{
     int type;
-    Location *location;
     StatementType *statement_type;
-    struct Statement *next;
 }Statement;
+
+typedef struct IfStatement{
+    ExpressionStatement *test;
+    Location *location;
+    struct StatementSet *consequent;
+    struct StatementSet *alternate;
+}IfStatement;
+
+typedef struct WhileStatement{
+    ExpressionStatement *test;
+    Location *location;
+    struct StatementSet *body;
+}WhileStatement;
+
+typedef struct ForStatement{
+    Location *location;
+    ExpressionStatement *init;
+    ExpressionStatement *test;
+    ExpressionStatement *update;
+    struct StatementSet *body;
+}ForStatement;
+
+typedef union StatementSetType{
+    Statement *statement; 
+    IfStatement *if_statement;
+    WhileStatement *while_statement;
+    ForStatement *for_statement;
+}StatementSetType;
+
+typedef struct StatementSet{
+    int type;
+    Location *location;
+    StatementSetType *statement_set_type;
+    struct StatementSet *next;
+}StatementSet;

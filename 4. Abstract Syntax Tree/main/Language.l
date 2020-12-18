@@ -61,6 +61,7 @@ identifier	[a-zA-Z_][a-zA-Z0-9_]*
 "{"				{return opencurly;}
 "}"				{return closecurly;}
 ","				{return comma;}
+";"				{return semicolon;}
 
 ">="			{return gteq;}
 ">"				{return gt;}

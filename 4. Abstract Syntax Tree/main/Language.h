@@ -16,8 +16,59 @@ ValueNode* makeValueNode(int datatype, Value* value){
     return value_node;
 }
 
-Expression* makeExpressionNode(char *identifier, ValueNode *value_node){
-    Expression *res = (Expression*) malloc(sizeof(Expression));
+ExpressionStatement* makeBinaryExpressionNode(ExpressionStatement *left, char *operator, ExpressionStatement *right){
+    BinaryExpression *binary_expression = (BinaryExpression*) malloc(sizeof(BinaryExpression));
+    binary_expression->left = left;
+    binary_expression->operator =strdup(operator);
+    binary_expression->right = right;
+    binary_expression->location = (Location*) malloc(sizeof(Location));
+    binary_expression->location->line = line;
+    
+    ExpressionStatement *res = (ExpressionStatement*) malloc(sizeof(ExpressionStatement));
+    res->type = BINARYEXP;
+    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
+    res->expression_type->binary_expression = binary_expression;
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
+    return res;
+}
+
+ExpressionStatement* makeUnaryExpressionNode(char *operator, char prefix, ExpressionStatement *expression_statement){
+    UnaryExpression *unary_expression = (UnaryExpression*) malloc(sizeof(UnaryExpression));
+    unary_expression->prefix = prefix;
+    unary_expression->operator = strdup(operator);
+    unary_expression->expression_statement = expression_statement;
+    unary_expression->location = (Location*) malloc(sizeof(Location));
+    unary_expression->location->line = line;
+
+    ExpressionStatement *res = (ExpressionStatement*) malloc(sizeof(ExpressionStatement));
+    res->type = UNARYEXP;
+    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
+    res->expression_type->unary_expression = unary_expression;
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
+    return res;
+}
+
+ExpressionStatement* makeTernaryExpressionNode(ExpressionStatement *test, ExpressionStatement *consequent, ExpressionStatement *alternate){
+    TernaryExpression *ternary_expression = (TernaryExpression*) malloc(sizeof(TernaryExpression));
+    ternary_expression->test = test;
+    ternary_expression->consequent = consequent;
+    ternary_expression->alternate = alternate;
+    ternary_expression->location = (Location*) malloc(sizeof(Location));
+    ternary_expression->location->line = line;
+
+    ExpressionStatement *res = (ExpressionStatement*) malloc(sizeof(ExpressionStatement));
+    res->type = TERNARYEXP;
+    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
+    res->expression_type->ternary_expression = ternary_expression;
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = line;
+    return res;
+}
+
+ExpressionStatement* makeExpressionStatementNode(char *identifier, ValueNode *value_node){
+    ExpressionStatement *res = (ExpressionStatement*) malloc(sizeof(ExpressionStatement));
     res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
     if(identifier!=NULL){
         res->type = IDENTIFIER;
@@ -32,8 +83,8 @@ Expression* makeExpressionNode(char *identifier, ValueNode *value_node){
     return res;
 }
 
-AssignmentExpression* makeAssignmentNode(char *identifier, char *operator, Expression *input){
-    AssignmentExpression *res = (AssignmentExpression*) malloc(sizeof(AssignmentExpression));
+AssignmentStatement* makeAssignmentStatementNode(char *identifier, char *operator, ExpressionStatement *input){
+    AssignmentStatement *res = (AssignmentStatement*) malloc(sizeof(AssignmentStatement));
     res->operator = strdup(operator);
     res->left = strdup(identifier);
     res->right = input;
@@ -42,8 +93,8 @@ AssignmentExpression* makeAssignmentNode(char *identifier, char *operator, Expre
     return res;
 }
 
-DeclarationExpression* makeDeclarationNode(int datatype, DeclarationList *declaration_list){
-    DeclarationExpression *res = (DeclarationExpression*) malloc(sizeof(DeclarationExpression));
+DeclarationStatement* makeDeclarationStatementNode(int datatype, DeclarationList *declaration_list){
+    DeclarationStatement *res = (DeclarationStatement*) malloc(sizeof(DeclarationStatement));
     res->datatype = datatype;
     res->declaration_list = declaration_list;
     res->location = (Location*) malloc(sizeof(Location));
@@ -51,12 +102,38 @@ DeclarationExpression* makeDeclarationNode(int datatype, DeclarationList *declar
     return res;
 }
 
+DeclarationList* makeDeclarationListNode(char *identifier, ExpressionStatement *init){
+    DeclarationList *res = (DeclarationList*) malloc(sizeof(DeclarationList));
+    res->identifier = strdup(identifier);
+    res->init = init;
+    res->next = NULL;
+    return res;
+}
+
+Statement* makeStatementNode(void *statement_type, int type){
+    Statement *res = (Statement*) malloc(sizeof(Statement));
+    res->type = type;
+    res->statement_type = (StatementType*) malloc(sizeof(StatementType));
+    switch(res->type){
+        case EXPRESSION:            
+            res->statement_type->expression_statement = (ExpressionStatement*)statement_type;
+            break;
+        case DECLARATION:
+            res->statement_type->declaration_statement = (DeclarationStatement*)statement_type;
+            break;
+        case ASSIGNMENT:
+            res->statement_type->assignment_statement = (AssignmentStatement*)statement_type;
+            break;
+    }
+    return res;
+}
+
 void* makeIfStatementNode(void *input1, void *input2, int input){
         // only if statement
         if(input==1){
             IfStatement *res = (IfStatement*) malloc(sizeof(IfStatement));
-            res->test = (Expression*)input1;
-            res->consequent = (Statement*)input2;
+            res->test = (ExpressionStatement*)input1;
+            res->consequent = (StatementSet*)input2;
             res->alternate = NULL;
             res->location = (Location*) malloc(sizeof(Location));
             res->location->line = line;
@@ -72,33 +149,33 @@ void* makeIfStatementNode(void *input1, void *input2, int input){
         }
         // else if with else
         if(input==3){
-            Statement *res = (Statement*) malloc(sizeof(Statement));
+            StatementSet *res = (StatementSet*) malloc(sizeof(StatementSet));
             res->type = IFSTATEMENT;
             res->next = NULL;            
             if(input1!=NULL){
-                Statement *dummy = (Statement*) malloc(sizeof(StatementType));
+                StatementSet *dummy = (StatementSet*) malloc(sizeof(StatementSetType));
                 IfStatement *ptr = (IfStatement*)input1;
                 while(ptr->alternate!=NULL)
-                    ptr = ptr->alternate->statement_type->if_statement;
-                ptr->alternate = (Statement*)input2;
-                dummy->statement_type = (StatementType*) malloc(sizeof(StatementType));
-                dummy->statement_type->if_statement = ptr;
+                    ptr = ptr->alternate->statement_set_type->if_statement;
+                ptr->alternate = (StatementSet*)input2;
+                dummy->statement_set_type = (StatementSetType*) malloc(sizeof(StatementSetType));
+                dummy->statement_set_type->if_statement = ptr;
                 dummy->location = (Location*) malloc(sizeof(Location));
                 dummy->location->line = line;
 
                 // dummy is pointing to last else if statement res will point to first else if
-                res->statement_type = (StatementType*) malloc(sizeof(StatementType));
-                res->statement_type->if_statement = (IfStatement*) input1;
+                res->statement_set_type = (StatementSetType*) malloc(sizeof(StatementSetType));
+                res->statement_set_type->if_statement = (IfStatement*) input1;
                 res->location = (Location*) malloc(sizeof(Location));
                 res->location->line = line;
             }
             else
-                res = (Statement*)input2;
+                res = (StatementSet*)input2;
             return res;
         }
 }
 
-IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statement *consequent){
+IfStatement* makeElseifStatementNode(IfStatement *prev, ExpressionStatement *test, StatementSet *consequent){
     IfStatement *res = (IfStatement*) malloc(sizeof(IfStatement));
     res->test = test;
     res->consequent = consequent;
@@ -110,11 +187,11 @@ IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statem
     if(prev!=NULL){
         IfStatement *ptr = prev;
         while(ptr->alternate!=NULL)
-            ptr = ptr->alternate->statement_type->if_statement;
-        ptr->alternate = (Statement*) malloc(sizeof(Statement));
+            ptr = ptr->alternate->statement_set_type->if_statement;
+        ptr->alternate = (StatementSet*) malloc(sizeof(StatementSet));
         ptr->alternate->type = IFSTATEMENT;
-        ptr->alternate->statement_type = (StatementType*) malloc(sizeof(StatementType));
-        ptr->alternate->statement_type->if_statement = res;
+        ptr->alternate->statement_set_type = (StatementSetType*) malloc(sizeof(StatementSetType));
+        ptr->alternate->statement_set_type->if_statement = res;
         ptr->alternate->next = NULL;
 
         // always returns first else if statement of/among all the else if statement
@@ -123,7 +200,7 @@ IfStatement* makeElseifStatementNode(IfStatement *prev, Expression *test, Statem
     return res;
 }
 
-WhileStatement* makeWhileStatementNode(Expression *test, Statement *body){
+WhileStatement* makeWhileStatementNode(ExpressionStatement *test, Statement *body){
     WhileStatement *res = (WhileStatement*) malloc(sizeof(WhileStatement));
     res->test = test;
     res->body = body;
@@ -132,95 +209,22 @@ WhileStatement* makeWhileStatementNode(Expression *test, Statement *body){
     return res;
 }
 
-Expression* makeBinaryExpressionNode(Expression *left, char *operator, Expression *right){
-    BinaryExpression *binary_expression = (BinaryExpression*) malloc(sizeof(BinaryExpression));
-    binary_expression->left = left;
-    binary_expression->operator =strdup(operator);
-    binary_expression->right = right;
-    binary_expression->location = (Location*) malloc(sizeof(Location));
-    binary_expression->location->line = line;
-    
-    Expression *res = (Expression*) malloc(sizeof(Expression));
-    res->type = BINARYEXP;
-    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
-    res->expression_type->binary_expression = binary_expression;
-    res->location = (Location*) malloc(sizeof(Location));
-    res->location->line = line;
-    return res;
-}
-
-Expression* makeUnaryExpressionNode(char *operator, char prefix, Expression *expression){
-    UnaryExpression *unary_expression = (UnaryExpression*) malloc(sizeof(UnaryExpression));
-    unary_expression->prefix = prefix;
-    unary_expression->operator = strdup(operator);
-    unary_expression->expression = expression;
-    unary_expression->location = (Location*) malloc(sizeof(Location));
-    unary_expression->location->line = line;
-
-    Expression *res = (Expression*) malloc(sizeof(Expression));
-    res->type = UNARYEXP;
-    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
-    res->expression_type->unary_expression = unary_expression;
-    res->location = (Location*) malloc(sizeof(Location));
-    res->location->line = line;
-    return res;
-}
-
-Expression* makeTernaryExpressionNode(Expression *test, Expression *consequent, Expression *alternate){
-    TernaryExpression *ternary_expression = (TernaryExpression*) malloc(sizeof(TernaryExpression));
-    ternary_expression->test = test;
-    ternary_expression->consequent = consequent;
-    ternary_expression->alternate = alternate;
-    ternary_expression->location = (Location*) malloc(sizeof(Location));
-    ternary_expression->location->line = line;
-
-    Expression *res = (Expression*) malloc(sizeof(Expression));
-    res->type = TERNARYEXP;
-    res->expression_type = (ExpressionType*) malloc(sizeof(ExpressionType));
-    res->expression_type->ternary_expression = ternary_expression;
-    res->location = (Location*) malloc(sizeof(Location));
-    res->location->line = line;
-    return res;
-}
-
-DeclarationList* makeDeclarationListNode(char *identifier, Expression *init){
-    DeclarationList *res = (DeclarationList*) malloc(sizeof(DeclarationList));
-    res->identifier = strdup(identifier);
-    res->init = init;
-    res->next = NULL;
-    return res;
-}
-
-ExpressionStatement* makeExpressionStatementNode(int type, void *expression_statement_type){
-    ExpressionStatement *res = (ExpressionStatement*) malloc(sizeof(ExpressionStatement));
+StatementSet* makeStatementSetNode(int type, void *statement_set_type, StatementSet *next){
+    StatementSet *res = (StatementSet*) malloc(sizeof(StatementSet));
     res->type = type;
-    res->expression_statement_type = (ExpressionStatementType*) malloc(sizeof(ExpressionStatementType));
+    res->statement_set_type = (StatementSetType*) malloc(sizeof(StatementSetType));
     switch(res->type){
-        case ASSIGNMENT:
-            res->expression_statement_type->assignment_expression = (AssignmentExpression*)expression_statement_type;
-            break;
-        case DECLARATION:
-            res->expression_statement_type->declaration_expression = (DeclarationExpression*)expression_statement_type;
-            break;
-    }
-    res->location = (Location*) malloc(sizeof(Location));
-    res->location->line = line;
-    return res;
-}
-
-Statement* makeStatementNode(int type, void *statement_type, Statement *next){
-    Statement *res = (Statement*) malloc(sizeof(Statement));
-    res->type = type;
-    res->statement_type = (StatementType*) malloc(sizeof(StatementType));
-    switch(res->type){
-        case EXPRESSION:
-            res->statement_type->expression_statement = (ExpressionStatement*)statement_type;
+        case STATEMENT:
+            res->statement_set_type->statement = (Statement*)statement_set_type;
             break;
         case IFSTATEMENT:
-            res->statement_type->if_statement = (IfStatement*)statement_type;
+            res->statement_set_type->if_statement = (IfStatement*)statement_set_type;
             break;
         case WHILESTATEMENT:
-            res->statement_type->while_statement = (WhileStatement*)statement_type;
+            res->statement_set_type->while_statement = (WhileStatement*)statement_set_type;
+            break;
+        case FORSTATEMENT:
+            res->statement_set_type->for_statement = (ForStatement*)statement_set_type;
             break;
     }
     res->location = (Location*) malloc(sizeof(Location));
@@ -231,10 +235,10 @@ Statement* makeStatementNode(int type, void *statement_type, Statement *next){
     return res;
 }
 
-Statement* reverseStatements(Statement *curr){
-    Statement *prev = NULL;
+StatementSet* reverseStatements(StatementSet *curr){
+    StatementSet *prev = NULL;
     while(curr!=NULL){
-        Statement *next = curr->next;
+        StatementSet *next = curr->next;
         curr->next = prev;
         prev = curr;
         curr = next;
@@ -242,38 +246,42 @@ Statement* reverseStatements(Statement *curr){
     return prev;
 }
 
-void printStatementNode(Statement *statement, int indent){
-    if(statement==NULL){
+void printStatementSetNode(StatementSet *statement_set, int indent){
+    if(statement_set==NULL){
         printIndent(indent);
         printf("Block does not contain any statement\n");
     }
     else{
-        Statement *this_statement = statement;
+        StatementSet *this_statement = statement_set;
         while(this_statement!=NULL){
             switch(this_statement->type){
-                case EXPRESSION:
-                    printExpressionNode(this_statement->statement_type->expression_statement, indent);
+                case STATEMENT:
+                    printStatementNode(this_statement->statement_set_type->statement, indent);
                     break;
                 case IFSTATEMENT:
-                    printIfStatementNode(this_statement->statement_type->if_statement, indent);
+                    printIfStatementNode(this_statement->statement_set_type->if_statement, indent);
                     break;
                 case WHILESTATEMENT:
-                    printWhileStatementNode(this_statement->statement_type->while_statement, indent);
+                    printWhileStatementNode(this_statement->statement_set_type->while_statement, indent);
+                    break;
             }
             this_statement = this_statement->next;
         }
     }
 }
 
-void printExpressionNode(ExpressionStatement *expression_statement, int indent){
+void printStatementNode(Statement *statement, int indent){
     printIndent(indent);
-    printf("ExpressionStatement\n");
-    switch(expression_statement->type){
-        case ASSIGNMENT:
-            printAssignmentNode(expression_statement->expression_statement_type->assignment_expression, indent+1);
+    printf("Statement\n");
+    switch(statement->type){
+        case EXPRESSION:
+            printExpressionStatementNode(statement->statement_type->expression_statement, indent+1);
             break;
         case DECLARATION:
-            printDeclarationNode(expression_statement->expression_statement_type->declaration_expression, indent+1);
+            printDeclarationStatementNode(statement->statement_type->declaration_statement, indent+1);
+            break;
+        case ASSIGNMENT:
+            printAssignmentStatementNode(statement->statement_type->assignment_statement, indent+1);
             break;
     }
 }
@@ -283,13 +291,13 @@ void printIfStatementNode(IfStatement *if_statement, int indent){
     printf("IfStatement\n");
     printIndent(indent+1);
     printf("test: \n");
-    printExpression(if_statement->test, indent+2);
+    printExpressionStatementNode(if_statement->test, indent+2);
     printIndent(indent+1);
     printf("consequent: \n");
-    printStatementNode(if_statement->consequent, indent+2);
+    printStatementSetNode(if_statement->consequent, indent+2);
     printIndent(indent+1);
     printf("alternate: \n");
-    printStatementNode(if_statement->alternate, indent+2);
+    printStatementSetNode(if_statement->alternate, indent+2);
 }
 
 void printWhileStatementNode(WhileStatement *while_statement, int indent){
@@ -297,33 +305,33 @@ void printWhileStatementNode(WhileStatement *while_statement, int indent){
     printf("WhileStatement\n");
     printIndent(indent+1);
     printf("test: \n");
-    printExpression(while_statement->test, indent+2);
+    printExpressionStatementNode(while_statement->test, indent+2);
     printIndent(indent+1);
     printf("body: \n");
-    printStatementNode(while_statement->body, indent+2);
+    printStatementSetNode(while_statement->body, indent+2);
 }
 
-void printAssignmentNode(AssignmentExpression *assignment_expression, int indent){
+void printAssignmentStatementNode(AssignmentStatement *assignment_statement, int indent){
     printIndent(indent);
-    printf("AssignmentExpression\n");
+    printf("AssignmentStatement\n");
     printIndent(indent+1);
     printf("Left:\n");
     printIndent(indent+2);
-    printf("identifier: %s\n", assignment_expression->left);
+    printf("identifier: %s\n", assignment_statement->left);
     printIndent(indent+1);
-    printf("Operator: %s\n", assignment_expression->operator);
+    printf("Operator: %s\n", assignment_statement->operator);
     printIndent(indent+1);
     printf("Right:\n");
-    printExpression(assignment_expression->right, indent+2);
+    printExpressionStatementNode(assignment_statement->right, indent+2);
 }
 
-void printDeclarationNode(DeclarationExpression *declaration_expression, int indent){
+void printDeclarationStatementNode(DeclarationStatement *declaration_statement, int indent){
     printIndent(indent);
-    printf("DeclarationExpression\n");
+    printf("DeclarationStatement\n");
     printIndent(indent+1);
     printf("datatype:\n");
     printIndent(indent+2);
-    switch(declaration_expression->datatype){
+    switch(declaration_statement->datatype){
         case INTEGER:
             printf("int\n");
             break;
@@ -343,26 +351,26 @@ void printDeclarationNode(DeclarationExpression *declaration_expression, int ind
             printf("string\n");
             break;
     }
-    printDeclarationListNode(declaration_expression->declaration_list, indent+1);
+    printDeclarationListNode(declaration_statement->declaration_list, indent+1);
 }
 
-void printExpression(Expression *expression, int indent){
-    switch(expression->type){
+void printExpressionStatementNode(ExpressionStatement *expression_statement, int indent){
+    switch(expression_statement->type){
         case IDENTIFIER:
             printIndent(indent);
-            printf("identifier: %s\n", expression->expression_type->identifier);
+            printf("identifier: %s\n", expression_statement->expression_type->identifier);
             break;
         case NUMERIC:
-            printValueNode(expression->expression_type->value_node, indent);
+            printValueNode(expression_statement->expression_type->value_node, indent);
             break;
         case BINARYEXP:
-            printBinaryExpressionNode(expression->expression_type->binary_expression, indent+1);
+            printBinaryExpressionNode(expression_statement->expression_type->binary_expression, indent+1);
             break;
         case UNARYEXP:
-            printUnaryExpressionNode(expression->expression_type->unary_expression, indent+1);
+            printUnaryExpressionNode(expression_statement->expression_type->unary_expression, indent+1);
             break;
         case TERNARYEXP:
-            printTernaryExpressionNode(expression->expression_type->ternary_expression, indent+1);
+            printTernaryExpressionNode(expression_statement->expression_type->ternary_expression, indent+1);
             break;
     }
 }
@@ -455,22 +463,22 @@ void printUnaryExpressionNode(UnaryExpression *unary_expression, int indent){
         printf("true\n");
     else if(unary_expression->prefix=='0')
         printf("false\n");
-    switch(unary_expression->expression->type){
+    switch(unary_expression->expression_statement->type){
         case IDENTIFIER:
             printIndent(indent+1);
-            printf("identifier: %s\n", unary_expression->expression->expression_type->identifier);
+            printf("identifier: %s\n", unary_expression->expression_statement->expression_type->identifier);
             break;
         case NUMERIC:
-            printValueNode(unary_expression->expression->expression_type->value_node, indent+1);
+            printValueNode(unary_expression->expression_statement->expression_type->value_node, indent+1);
             break;
         case BINARYEXP:
-            printBinaryExpressionNode(unary_expression->expression->expression_type->binary_expression, indent+1);
+            printBinaryExpressionNode(unary_expression->expression_statement->expression_type->binary_expression, indent+1);
             break;
         case UNARYEXP:
-            printUnaryExpressionNode(unary_expression->expression->expression_type->unary_expression, indent+1);
+            printUnaryExpressionNode(unary_expression->expression_statement->expression_type->unary_expression, indent+1);
             break;
         case TERNARYEXP:
-            printTernaryExpressionNode(unary_expression->expression->expression_type->ternary_expression, indent+1);
+            printTernaryExpressionNode(unary_expression->expression_statement->expression_type->ternary_expression, indent+1);
             break;
     }
 }
@@ -554,7 +562,7 @@ void printDeclarationListNode(DeclarationList *declaration_list, int indent){
             printf("default initialization\n");
         }
         else
-            printExpression(ptr->init, indent+1);
+            printExpressionStatementNode(ptr->init, indent+1);
         ptr = ptr->next;
     }
 }
