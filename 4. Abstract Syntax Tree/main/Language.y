@@ -58,14 +58,14 @@
 
 %%
 
-PROGRAM : STATEMENT_SET 
+PROGRAM : opencurly OPTIONAL_NEWLINE STATEMENT_SET OPTIONAL_NEWLINE closecurly {$3 = reverseStatements($3); /*printStatementSetNode($3, 0);*/ executeProgram($3); showVariables(); exit(0);}
 		;
 
 STATEMENT_SET : /* epsilon */                     	 {$$ = NULL;}
-			  | STATEMENT_SET STATEMENTS newline 	{$$ = makeStatementSetNode(STATEMENT, $2, $1); /*printStatementSetNode($$, 0);*/}
-              | STATEMENT_SET IF_CONSTRUCT 		 	 {$$ = makeStatementSetNode(IFSTATEMENT, $2, $1); printStatementSetNode($$, 0);}
-              | STATEMENT_SET WHILE_LOOP 			 {$$ = makeStatementSetNode(WHILESTATEMENT, $2, $1); printStatementSetNode($$, 0);}
-              | STATEMENT_SET FOR_LOOP			{$$ = makeStatementSetNode(FORSTATEMENT, $2, $1); printStatementSetNode($$, 0);}
+			        | STATEMENT_SET STATEMENTS OPTIONAL_NEWLINE 	{$$ = makeStatementSetNode(STATEMENT, $2, $1);}
+              | STATEMENT_SET IF_CONSTRUCT OPTIONAL_NEWLINE 		 	 {$$ = makeStatementSetNode(IFSTATEMENT, $2, $1);}
+              | STATEMENT_SET WHILE_LOOP OPTIONAL_NEWLINE 			 {$$ = makeStatementSetNode(WHILESTATEMENT, $2, $1);}
+              | STATEMENT_SET FOR_LOOP OPTIONAL_NEWLINE			{$$ = makeStatementSetNode(FORSTATEMENT, $2, $1);}
               ;
 
 OPTIONAL_NEWLINE : /* epsilon */
@@ -73,9 +73,9 @@ OPTIONAL_NEWLINE : /* epsilon */
                  ;
 
 STATEMENTS : EXPRESSION_ST				{$$ = makeStatementNode($1, EXPRESSION);}
-		   | DECLARATION_ST 			{$$ = makeStatementNode($1, DECLARATION);}
-		   | ASSIGNMENT_ST 				{$$ = makeStatementNode($1, ASSIGNMENT);}
-		   ;
+		       | DECLARATION_ST 			{$$ = makeStatementNode($1, DECLARATION);}
+		       | ASSIGNMENT_ST 				{$$ = makeStatementNode($1, ASSIGNMENT);}
+           ;
 
 EXPRESSION_ST : TERNARY {$$ = $1;}
 			  ;
@@ -106,7 +106,7 @@ ASSIGNMENT_ST : id equal EXPRESSION_ST 				{$$ = makeAssignmentStatementNode($1,
               | id modulo equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "%=", $4);}
               ;
 
-IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2); /*printIfStatementNode($$, 0);*/}
+IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {scope++; $$ = makeIfStatementNode($1, $2, 2); scope--;}
 			 ;
 
 IF_BLOCK : ifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
@@ -129,19 +129,19 @@ ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
 		   | elsekeyword OPTIONAL_NEWLINE
 			 opencurly OPTIONAL_NEWLINE
 			 	STATEMENT_SET
-			 closecurly newline {$$ = reverseStatements($5);}
+			 closecurly newline {$$ = reverseStatements($5); line++;}
 		   ;
 
 WHILE_LOOP : whilekeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
 			 opencurly OPTIONAL_NEWLINE
 			 	STATEMENT_SET
-			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8);}
+			 closecurly newline {scope++; $8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8); scope--; line++;}
 			;
 
 FOR_LOOP : forkeyword openbracket EXP_ASGN_ST_EPS semicolon EXP_ASGN_ST semicolon EXP_ASGN_ST closebracket OPTIONAL_NEWLINE
 			opencurly OPTIONAL_NEWLINE
 				STATEMENT_SET
-			closecurly newline {$12 = reverseStatements($12); $$ = makeForStatementNode($3, $5, $7, $12);}
+			closecurly newline {scope++; $12 = reverseStatements($12); $$ = makeForStatementNode($3, $5, $7, $12); scope--; line++;}
 		 ;
 
 EXP_ASGN_ST_EPS : /* epsilon */ 	{$$ = NULL;}

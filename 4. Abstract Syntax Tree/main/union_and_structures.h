@@ -23,6 +23,12 @@ typedef struct ValueNode{
     Value *value;
 }ValueNode;
 
+typedef struct SymbolTable{
+    char *identifier;
+    ValueNode *value_node;
+    struct SymbolTable *next;
+}SymbolTable;
+
 typedef struct UnaryExpression{
     char prefix;
     char *operator;
@@ -63,6 +69,7 @@ typedef struct DeclarationList{
 
 typedef struct DeclarationStatement{
     int datatype;
+    int scope;
     Location *location;
     struct DeclarationList *declaration_list;
 }DeclarationStatement;
@@ -119,3 +126,5 @@ typedef struct StatementSet{
     StatementSetType *statement_set_type;
     struct StatementSet *next;
 }StatementSet;
+
+SymbolTable *first_symbol;

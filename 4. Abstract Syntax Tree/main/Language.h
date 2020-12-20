@@ -1,8 +1,16 @@
 #include "constants.h"
 #include "union_and_structures.h"
 
+ValueNode* executeExpressionStatementNode(ExpressionStatement *expression_statement, int this_line);
+
 int line = 1;
 int scope = 0;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                             //
+// --------------------------------------------- Node generation Functions --------------------------------------------- //   //
+//                                                                                                                           //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ValueNode* makeValueNode(int datatype, Value* value){
     ValueNode *value_node = (ValueNode*) malloc(sizeof(ValueNode));
@@ -96,6 +104,7 @@ AssignmentStatement* makeAssignmentStatementNode(char *identifier, char *operato
 DeclarationStatement* makeDeclarationStatementNode(int datatype, DeclarationList *declaration_list){
     DeclarationStatement *res = (DeclarationStatement*) malloc(sizeof(DeclarationStatement));
     res->datatype = datatype;
+    res->scope = scope;
     res->declaration_list = declaration_list;
     res->location = (Location*) malloc(sizeof(Location));
     res->location->line = line;
@@ -256,6 +265,12 @@ StatementSet* reverseStatements(StatementSet *curr){
     }
     return prev;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                      //
+// --------------------------------------------- AST print Functions --------------------------------------------- //   //
+//                                                                                                                      //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void printStatementSetNode(StatementSet *statement_set, int indent){
     if(statement_set==NULL){
@@ -607,4 +622,858 @@ void printDeclarationListNode(DeclarationList *declaration_list, int indent){
 void printIndent(int indent){
     while(indent-- > 0)
         printf("    |");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                       //
+// --------------------------------------------- Util Functions --------------------------------------------- //        //
+//                                                                                                                     //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+string toString(ValueNode *value_node){
+    char *str_val;
+    int size;
+    switch(value_node->datatype){
+        case INTEGER:
+            size = snprintf(NULL, 0, "%d", value_node->value->i_val);
+            str_val = malloc(size + 1);
+            snprintf(str_val, size+1, "%d", value_node->value->i_val);
+            break;
+        case FLOAT:
+            size = snprintf(NULL, 0, "%f", value_node->value->f_val);
+            str_val = malloc(size + 1);
+            snprintf(str_val, size+1, "%f", value_node->value->f_val);
+            break;
+        case DOUBLE:
+            size = snprintf(NULL, 0, "%d", value_node->value->d_val);
+            str_val = malloc(size + 1);
+            snprintf(str_val, size+1, "%d", value_node->value->d_val);
+            break;
+        case CHARACTER:
+            size = snprintf(NULL, 0, "%c", value_node->value->c_val);
+            str_val = malloc(size + 1);
+            snprintf(str_val, size+1, "%c", value_node->value->c_val);
+            break;
+        case BOOLEAN:
+            size = snprintf(NULL, 0, "%c", value_node->value->c_val);
+            str_val = malloc(size + 1);
+            snprintf(str_val, size+1, "%c", value_node->value->c_val);
+            break;
+    }
+    return str_val;
+}
+
+ValueNode* changeValueNode(ValueNode *value_node, int to_datatype){
+    int from_datatype = value_node->datatype;
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    res->datatype = to_datatype;
+    res->scope = scope;
+    res->value = (Value*) malloc(sizeof(Value));
+
+    if(to_datatype == INTEGER){
+        if(from_datatype == INTEGER) res->value->i_val = value_node->value->i_val;
+        else if(from_datatype == FLOAT) res->value->i_val = (int)value_node->value->f_val;
+        else if(from_datatype == DOUBLE) res->value->i_val = (int)value_node->value->i_val;
+        else if(from_datatype == CHARACTER) res->value->i_val = value_node->value->c_val;
+        else if(from_datatype == BOOLEAN) {
+            if(value_node->value->b_val=='1')
+                res->value->i_val = 1;
+            else
+                res->value->i_val = 0;
+        }
+        else if(from_datatype == STRING) {
+            printf("JvC: [error: %d] fail type conversion string to int\n", line);
+            exit(0);
+        }
+    }
+
+    else if(to_datatype == FLOAT){
+        if(from_datatype == INTEGER) res->value->f_val = value_node->value->i_val;
+        else if(from_datatype == FLOAT) res->value->f_val = value_node->value->f_val;
+        else if(from_datatype == DOUBLE) res->value->f_val = (float)value_node->value->d_val;
+        else if(from_datatype == CHARACTER) res->value->f_val = (float)value_node->value->c_val;
+        else if(from_datatype == BOOLEAN) res->value->f_val = (float)value_node->value->b_val;
+        else if(from_datatype == STRING) {
+            printf("JvC: [error: %d] fail type conversion string to float\n", line);
+            exit(0);
+        }
+    }
+
+    else if(to_datatype == DOUBLE){
+        if(from_datatype == INTEGER) res->value->d_val = value_node->value->i_val;
+        else if(from_datatype == FLOAT) res->value->d_val = value_node->value->f_val;
+        else if(from_datatype == DOUBLE) res->value->d_val = value_node->value->d_val;
+        else if(from_datatype == CHARACTER) res->value->d_val = (double)value_node->value->c_val;
+        else if(from_datatype == BOOLEAN) res->value->d_val = (double)value_node->value->b_val;
+        else if(from_datatype == STRING) {
+            printf("JvC: [error: %d] fail type conversion string to double\n", line);
+            exit(0);
+        }
+    }
+
+    else if(to_datatype == CHARACTER){
+        if(from_datatype == INTEGER)res->value->c_val = value_node->value->i_val;
+        else if(from_datatype == FLOAT) {
+            printf("JvC: [error: %d] fail type conversion float to char\n", line);
+            exit(0);
+        }
+        else if(from_datatype == DOUBLE) {
+            printf("JvC: [error: %d] fail type conversion double to char\n", line);
+            exit(0);
+        }
+        else if(from_datatype == CHARACTER) res->value->c_val = value_node->value->c_val;
+        else if(from_datatype == BOOLEAN) res->value->c_val = value_node->value->c_val;
+        else if(from_datatype == STRING) {
+            printf("JvC: [error: %d] fail type conversion string to char\n", line);
+            exit(0);
+        }
+    }
+
+    else if(to_datatype == BOOLEAN){
+        if(from_datatype == INTEGER) {
+            printf("JvC: [error: %d] fail type conversion int to boolean\n", line);
+            exit(0);
+        }
+        else if(from_datatype == FLOAT) {
+            printf("JvC: [error: %d] fail type conversion float to boolean\n", line);
+            exit(0);
+        }
+        else if(from_datatype == DOUBLE) {
+            printf("JvC: [error: %d] fail type conversion double to boolean\n", line);
+            exit(0);
+        }
+        else if(from_datatype == CHARACTER) {
+            printf("JvC: [error: %d] fail type conversion char to boolean\n", line);
+            exit(0);
+        }
+        else if(from_datatype == BOOLEAN) res->value->b_val = value_node->value->b_val;
+        else if(from_datatype == STRING) {
+            printf("JvC: [error: %d] fail type conversion string to boolean\n", line);
+            exit(0);
+        }
+    }
+    
+    else if(to_datatype == STRING){
+        if(from_datatype == INTEGER) res->value->str_val = toString(value_node);
+        else if(from_datatype == FLOAT) res->value->str_val = toString(value_node);
+        else if(from_datatype == DOUBLE) res->value->str_val = toString(value_node);
+        else if(from_datatype == CHARACTER) res->value->str_val = toString(value_node);
+        else if(from_datatype == BOOLEAN) res->value->str_val = toString(value_node);
+        else if(from_datatype == STRING) res->value->str_val = strdup(value_node->value->str_val);
+    }
+    res->location = value_node->location;
+    return res;
+}
+
+ValueNode* cloneSymbol(ValueNode *value_node, int this_line){
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    res->datatype = value_node->datatype;
+    res->scope = scope;
+    res->value = (Value*) malloc(sizeof(Value));
+
+    switch(value_node->datatype){
+        case INTEGER:
+            res->value->i_val = value_node->value->i_val;
+            break;
+        case FLOAT:
+            res->value->f_val = value_node->value->f_val;
+            break;
+        case DOUBLE:
+            res->value->d_val = value_node->value->d_val;
+            break;
+        case CHARACTER:
+            res->value->c_val = value_node->value->c_val;
+            break;
+        case BOOLEAN:
+            res->value->b_val = value_node->value->b_val;
+            break;
+        case STRING:
+            res->value->str_val = strdup(value_node->value->str_val);
+            break;
+    }
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = this_line;
+    return res;
+}
+
+string getDatatype(int datatype_of){
+    switch(datatype_of){
+        case INTEGER:
+            return "int";
+            break;
+        case FLOAT:
+            return "float";
+            break;
+        case DOUBLE:
+            return "double";
+            break;
+        case CHARACTER:
+            return "char";
+            break;
+        case BOOLEAN:
+            return "boolean";
+            break;
+        default:
+            return "string";
+            break;
+    }
+}
+
+void showVariables(){
+    int i=0;
+    for(;i<55;i++)
+        printf("-");
+    printf("\n%35s\n", "Variable summary");
+    for(i=0;i<55;i++)
+        printf("-");
+    printf("\n %-10s %-10s %-15s %-10s %-10s\n", "Name", "Datatype", "Value", "line", "scope");
+    SymbolTable *ptr = first_symbol;
+    while(ptr!=NULL){
+        printf(" %-10s %-10s", ptr->identifier, getDatatype(ptr->value_node->datatype));
+        switch(ptr->value_node->datatype){
+            case INTEGER:
+                printf(" %-15d", ptr->value_node->value->i_val);
+                break;
+            case FLOAT:
+                printf(" %-15f", ptr->value_node->value->f_val);
+                break;
+            case DOUBLE:
+                printf(" %-15lf", ptr->value_node->value->d_val);
+                break;
+            case CHARACTER:
+                printf(" %-15c", ptr->value_node->value->c_val);
+                break;
+            case BOOLEAN:
+                printf(" %-15s", ptr->value_node->value->b_val=='0' ? "false" : "true");
+                break;
+            case STRING:
+                printf(" %-15s", ptr->value_node->value->str_val);
+                break;
+        }
+        printf(" %-10d %-10d\n", ptr->value_node->location->line, ptr->value_node->scope);
+        ptr = ptr->next;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                       //
+// --------------------------------------------- Execution Functions --------------------------------------------- //   //
+//                                                                                                                     //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void executeProgram(StatementSet *first_statement){
+    StatementSet *ptr = first_statement;
+    while(ptr!=NULL){
+        switch(ptr->type){
+            case STATEMENT:
+                executeStatementNode(ptr->statement_set_type->statement);
+                break;
+            case IFSTATEMENT:
+                // executeIfStatementNode(ptr->statement_set_type->if_statement);
+                break;
+            case WHILESTATEMENT:
+                // executeWhileStatementNode(ptr->statement_set_type->while_statement);
+                break;
+            case FORSTATEMENT:
+                // executeForStatementNode(ptr->statement_set_type->for_statement);
+                break;
+        }
+        ptr = ptr->next;
+    }
+}
+
+void executeStatementNode(Statement *statement){
+    switch(statement->type){
+        case EXPRESSION:
+            // ValueNode *value_node = executeExpressionStatementNode(statement->statement_type->expression_statement);
+            break;
+        case DECLARATION:
+            executeDeclarationStatementNode(statement->statement_type->declaration_statement);
+            break;
+        case ASSIGNMENT:
+            // executeAssignmentStatementNode(statement->statement_type->assignment_statement);
+            break;
+    }
+}
+
+void executeDeclarationStatementNode(DeclarationStatement *declaration_statement){
+    executeDeclarationListNode(declaration_statement->declaration_list, declaration_statement->datatype, declaration_statement->location->line);
+}
+
+void executeDeclarationListNode(DeclarationList *declaration_list, int datatype, int this_line){
+    DeclarationList *ptr = declaration_list;
+    while(ptr!=NULL){
+        insertInSymbolTable(ptr->identifier, ptr->init, datatype, this_line);
+        ptr = ptr->next;
+    }
+}
+
+ValueNode* findSymbol(char *identifier){
+    SymbolTable *ptr = first_symbol;
+    while(ptr!=NULL){
+        if(strcmp(ptr->identifier, identifier) == 0)
+            return ptr->value_node;
+        ptr = ptr->next;
+    }
+    return NULL;
+}
+
+ValueNode* executeValueNode(ValueNode *value_node){
+    return value_node;
+}
+
+ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int this_line){
+    ValueNode *left = executeExpressionStatementNode(binary_expression->left, this_line);
+    ValueNode *right = executeExpressionStatementNode(binary_expression->right, this_line);
+
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    res->value = (Value*) malloc(sizeof(Value));
+
+    if(strcmp(binary_expression->operator, "||")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "&&")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "|")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "^")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "&")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, ">=")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, ">")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "<=")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "<")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "==")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "!=")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, ">>")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "<<")==0){
+
+    }
+    else if(strcmp(binary_expression->operator, "-")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator '-'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator '-'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val - right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->i_val - right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->i_val - right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val - right->value->c_val;
+            }
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val - right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val - right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->f_val - right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val - right->value->c_val;
+            }
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val - right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->d_val = left->value->d_val - right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val - right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val - right->value->c_val;
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val - right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->c_val - right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->c_val - right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = left->value->c_val - right->value->c_val;
+            }
+        }
+    }
+    else if(strcmp(binary_expression->operator, "+")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator '+'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val + right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->i_val + right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->i_val + right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val + right->value->c_val;
+            }
+            else if(right->datatype==STRING){
+                res->datatype = STRING;
+                res->value->str_val = strcat(toString(left), right->value->str_val);
+            }
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val + right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val + right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->f_val + right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val + right->value->c_val;
+            }
+            else if(right->datatype==STRING){
+                res->datatype = STRING;
+                res->value->str_val = strcat(toString(left), right->value->str_val);
+            }
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val + right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->d_val = left->value->d_val + right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val + right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val + right->value->c_val;
+            }
+            else if(right->datatype==STRING){
+                res->datatype = STRING;
+                res->value->str_val = strcat(toString(left), right->value->str_val);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val + right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->c_val + right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->c_val + right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = left->value->c_val + right->value->c_val;
+            }
+            else if(right->datatype==STRING){
+                res->datatype = STRING;
+                res->value->str_val = strcat(toString(left), right->value->str_val);
+            }
+        }
+        else if(left->datatype==STRING){
+            res->datatype = STRING;
+            if(right->datatype==INTEGER)
+                res->value->str_val = strcat(left->value->str_val, toString(right));
+            if(right->datatype==FLOAT)
+                res->value->str_val = strcat(left->value->str_val, toString(right));
+            else if(right->datatype==DOUBLE)
+                res->value->str_val = strcat(left->value->str_val, toString(right));
+            else if(right->datatype==CHARACTER)
+                res->value->str_val = strcat(left->value->str_val, toString(right));
+            else if(right->datatype==STRING)
+                res->value->str_val = strcat(left->value->str_val, right->value->str_val);
+        }
+    }
+    else if(strcmp(binary_expression->operator, "*")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator '*'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator '*'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val * right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->i_val * right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->i_val * right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val * right->value->c_val;
+            }
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val * right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val * right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->f_val * right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val * right->value->c_val;
+            }
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val * right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->d_val = left->value->d_val * right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val * right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val * right->value->c_val;
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val * right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->c_val * right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->c_val * right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = left->value->c_val * right->value->c_val;
+            }
+        }
+    }
+    else if(strcmp(binary_expression->operator, "/")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator '/'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator '/'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val / right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->i_val / right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->i_val / right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val / right->value->c_val;
+            }
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val / right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val / right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->f_val / right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->f_val / right->value->c_val;
+            }
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val / right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->d_val = left->value->d_val / right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val / right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->d_val / right->value->c_val;
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val / right->value->i_val;
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = left->value->c_val / right->value->f_val;
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = left->value->c_val / right->value->d_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = left->value->c_val / right->value->c_val;
+            }
+        }
+    }
+    else if(strcmp(binary_expression->operator, "%")==0){
+        if(left->datatype==FLOAT || right->datatype==FLOAT){
+            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==DOUBLE || right->datatype==DOUBLE){
+            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val % right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val % right->value->c_val;
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val % right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = left->value->c_val % right->value->c_val;
+            }
+        }
+    }
+    else if(strcmp(binary_expression->operator, "pow")==0){
+
+    }
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = this_line;
+    return res;
+}
+
+ValueNode* executeExpressionStatementNode(ExpressionStatement *expression_statement, int this_line){
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    switch(expression_statement->type){
+        case IDENTIFIER:
+            res = findSymbol(expression_statement->expression_type->identifier);
+            res = cloneSymbol(res, this_line);
+            break;
+        case NUMERIC:
+            res = executeValueNode(expression_statement->expression_type->value_node);
+            break;
+        case BINARYEXP:
+            res = executeBinaryExpressionNode(expression_statement->expression_type->binary_expression, this_line);
+            break;
+        case UNARYEXP:
+            // printUnaryExpressionNode(expression_statement->expression_type->unary_expression, indent+1);
+            break;
+        case TERNARYEXP:
+            // printTernaryExpressionNode(expression_statement->expression_type->ternary_expression, indent+1);
+            break;
+    }
+    return res;
+}
+
+void insertInSymbolTable(char *identifier, ExpressionStatement *init, int datatype, int this_line){
+    SymbolTable *new_node = (SymbolTable*) malloc(sizeof(SymbolTable));
+    new_node->identifier = identifier;
+
+    if(init==NULL){
+        ValueNode *default_init = (ValueNode*) malloc(sizeof(ValueNode));
+        default_init->datatype = datatype;
+        default_init->scope = scope;
+
+        default_init->location = (Location*) malloc(sizeof(Location));
+        default_init->location->line = this_line;
+
+        default_init->value = (Value*) malloc(sizeof(Value));
+        switch(datatype){
+            case INTEGER:
+                default_init->value->i_val = 0;
+                break;
+            case FLOAT:
+                default_init->value->f_val = 0;
+                break;
+            case DOUBLE:
+                default_init->value->d_val = 0;
+                break;
+            case CHARACTER:
+                default_init->value->c_val = 0;
+                break;
+            case BOOLEAN:
+                default_init->value->b_val = '0';
+                break;
+            case STRING:
+                default_init->value->i_val = NULL;
+                break;
+        }
+        new_node->value_node = default_init;
+    }
+    else{
+        ValueNode *value_node = executeExpressionStatementNode(init, this_line);
+        new_node->value_node = changeValueNode(value_node, datatype);
+    }
+    new_node->value_node->scope = scope;
+    if(first_symbol==NULL){
+        first_symbol = new_node;
+        first_symbol->next = NULL;
+    }
+    else{
+        SymbolTable *ptr = first_symbol;
+        while(ptr->next!=NULL) {
+          if(strcmp(ptr->identifier, new_node->identifier) == 0) {
+            printf("JvC: [error: %d] variable %s is already defined\n", line, new_node->identifier);
+            exit(0);
+            return;
+          }
+          ptr = ptr->next;
+        }
+        
+        if(strcmp(ptr->identifier, new_node->identifier) == 0){
+          printf("JvC: [error: %d] variable %s is already defined\n", line, new_node->identifier);
+          exit(0);
+          return NULL;
+        }
+
+        ptr->next = new_node;
+        new_node->next = NULL;
+    }
 }
