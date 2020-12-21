@@ -765,6 +765,23 @@ ValueNode* changeValueNode(ValueNode *value_node, int to_datatype){
     return res;
 }
 
+ValueNode* findSymbol(char *identifier, int this_line){
+    SymbolTable *ptr = first_symbol;
+    while(ptr!=NULL){
+        if(strcmp(ptr->identifier, identifier) == 0){
+            if(ptr->value_node->scope != scope){
+                printf("JvC: [error: %d] symbol '%s' is out of scope\n", ptr->value_node->location->line, ptr->identifier);
+                exit(0);
+            }
+            return ptr->value_node;
+        }
+        ptr = ptr->next;
+    }
+    printf("JvC: [error: %d] cannot find symbol %s\n", this_line, identifier);
+    exit(0);
+    return NULL;
+}
+
 ValueNode* cloneSymbol(ValueNode *value_node, int this_line){
     ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
     res->datatype = value_node->datatype;
@@ -864,9 +881,10 @@ void showVariables(){
 void executeProgram(StatementSet *first_statement){
     StatementSet *ptr = first_statement;
     while(ptr!=NULL){
+        int this_line = ptr->location->line;
         switch(ptr->type){
             case STATEMENT:
-                executeStatementNode(ptr->statement_set_type->statement);
+                executeStatementNode(ptr->statement_set_type->statement, this_line);
                 break;
             case IFSTATEMENT:
                 // executeIfStatementNode(ptr->statement_set_type->if_statement);
@@ -882,22 +900,138 @@ void executeProgram(StatementSet *first_statement){
     }
 }
 
-void executeStatementNode(Statement *statement){
+void executeStatementNode(Statement *statement, int this_line){
+    ValueNode *value_node;
     switch(statement->type){
         case EXPRESSION:
-            // ValueNode *value_node = executeExpressionStatementNode(statement->statement_type->expression_statement);
+            value_node = executeExpressionStatementNode(statement->statement_type->expression_statement, this_line);
             break;
         case DECLARATION:
-            executeDeclarationStatementNode(statement->statement_type->declaration_statement);
+            executeDeclarationStatementNode(statement->statement_type->declaration_statement, this_line);
             break;
         case ASSIGNMENT:
-            // executeAssignmentStatementNode(statement->statement_type->assignment_statement);
+            executeAssignmentStatementNode(statement->statement_type->assignment_statement, this_line);
             break;
     }
 }
 
-void executeDeclarationStatementNode(DeclarationStatement *declaration_statement){
+void executeDeclarationStatementNode(DeclarationStatement *declaration_statement, int this_line){
     executeDeclarationListNode(declaration_statement->declaration_list, declaration_statement->datatype, declaration_statement->location->line);
+}
+
+void executeAssignmentStatementNode(AssignmentStatement *assignment_statement, int this_line){
+    ValueNode *left = findSymbol(assignment_statement->left, this_line);
+    ValueNode *right = executeExpressionStatementNode(assignment_statement->right, this_line);
+
+    ValueNode *res = cloneSymbol(left, this_line);
+    res = changeValueNode(right, res->datatype);
+
+    if(strcmp(assignment_statement->operator, "=")==0){
+        left->value = res->value;
+    }
+    else if(strcmp(assignment_statement->operator, "+=")==0){
+        if(res->datatype==BOOLEAN){
+            printf("JvC: [error: %d] bad operand types for binary operator '%s'\n", this_line, assignment_statement->operator);
+            exit(0);
+        }
+        switch(res->datatype){
+            case INTEGER:
+                left->value->i_val += res->value->i_val;
+                break;
+            case FLOAT:
+                left->value->f_val += res->value->f_val;
+                break;
+            case DOUBLE:
+                left->value->d_val += res->value->d_val;
+                break;
+            case CHARACTER:
+                left->value->c_val += res->value->c_val;
+                break;
+            case STRING:
+                left->value->str_val = strcat(left->value->str_val, res->value->str_val);
+                break;
+        }
+    }
+    else if(strcmp(assignment_statement->operator, "-=")==0){
+        if(res->datatype==BOOLEAN || res->datatype==STRING){
+            printf("JvC: [error: %d] bad operand types for binary operator '%s'\n", this_line, assignment_statement->operator);
+            exit(0);
+        }
+        switch(res->datatype){
+            case INTEGER:
+                left->value->i_val -= res->value->i_val;
+                break;
+            case FLOAT:
+                left->value->f_val -= res->value->f_val;
+                break;
+            case DOUBLE:
+                left->value->d_val -= res->value->d_val;
+                break;
+            case CHARACTER:
+                left->value->c_val -= res->value->c_val;
+                break;
+        }
+    }
+    else if(strcmp(assignment_statement->operator, "*=")==0){
+        if(res->datatype==BOOLEAN || res->datatype==STRING){
+            printf("JvC: [error: %d] bad operand types for binary operator '%s'\n", this_line, assignment_statement->operator);
+            exit(0);
+        }
+        switch(res->datatype){
+            case INTEGER:
+                left->value->i_val *= res->value->i_val;
+                break;
+            case FLOAT:
+                left->value->f_val *= res->value->f_val;
+                break;
+            case DOUBLE:
+                left->value->d_val *= res->value->d_val;
+                break;
+            case CHARACTER:
+                left->value->c_val *= res->value->c_val;
+                break;
+        }
+    }
+    else if(strcmp(assignment_statement->operator, "/=")==0){
+        if(res->datatype==BOOLEAN || res->datatype==STRING){
+            printf("JvC: [error: %d] bad operand types for binary operator '%s'\n", this_line, assignment_statement->operator);
+            exit(0);
+        }
+        switch(res->datatype){
+            case INTEGER:
+                left->value->i_val -= res->value->i_val;
+                break;
+            case FLOAT:
+                left->value->f_val -= res->value->f_val;
+                break;
+            case DOUBLE:
+                left->value->d_val -= res->value->d_val;
+                break;
+            case CHARACTER:
+                left->value->c_val -= res->value->c_val;
+                break;
+        }
+    }
+    else if(strcmp(assignment_statement->operator, "%=")==0){
+        if(res->datatype==BOOLEAN || res->datatype==STRING){
+            printf("JvC: [error: %d] bad operand types for binary operator '%s'\n", this_line, assignment_statement->operator);
+            exit(0);
+        }
+        switch(res->datatype){
+            case INTEGER:
+                left->value->i_val -= res->value->i_val;
+                break;
+            case FLOAT:
+                left->value->f_val -= res->value->f_val;
+                break;
+            case DOUBLE:
+                left->value->d_val -= res->value->d_val;
+                break;
+            case CHARACTER:
+                left->value->c_val -= res->value->c_val;
+                break;
+        }
+    }
 }
 
 void executeDeclarationListNode(DeclarationList *declaration_list, int datatype, int this_line){
@@ -906,16 +1040,6 @@ void executeDeclarationListNode(DeclarationList *declaration_list, int datatype,
         insertInSymbolTable(ptr->identifier, ptr->init, datatype, this_line);
         ptr = ptr->next;
     }
-}
-
-ValueNode* findSymbol(char *identifier){
-    SymbolTable *ptr = first_symbol;
-    while(ptr!=NULL){
-        if(strcmp(ptr->identifier, identifier) == 0)
-            return ptr->value_node;
-        ptr = ptr->next;
-    }
-    return NULL;
 }
 
 ValueNode* executeValueNode(ValueNode *value_node){
@@ -1996,11 +2120,150 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     return res;
 }
 
+ValueNode* executeUnaryExpressionNode(UnaryExpression *unary_expression, int this_line){
+    ValueNode *value_node = executeExpressionStatementNode(unary_expression->expression_statement, this_line);
+
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    res->value = (Value*) malloc(sizeof(Value));
+    if(strcmp(unary_expression->operator, "+")==0){
+        if(value_node->datatype == BOOLEAN || value_node->datatype == STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, unary_expression->operator);
+            printf("first type: %s\n", getDatatype(value_node->datatype));
+            printf("second type: %s\n", getDatatype(value_node->datatype));
+            exit(0);
+        }
+        else
+            res = cloneSymbol(value_node, this_line);
+    }
+    else if(strcmp(unary_expression->operator, "-")==0){
+        if(value_node->datatype == BOOLEAN || value_node->datatype == STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, unary_expression->operator);
+            printf("first type: %s\n", getDatatype(value_node->datatype));
+            printf("second type: %s\n", getDatatype(value_node->datatype));
+            exit(0);
+        }
+        else{
+            res = cloneSymbol(value_node, this_line);
+            switch(res->datatype){
+                case INTEGER:
+                    res->value->i_val = -1*res->value->i_val;
+                    break;
+                case FLOAT:
+                    res->value->f_val = -1*res->value->f_val;
+                    break;
+                case DOUBLE:
+                    res->value->d_val = -1*res->value->d_val;
+                    break;
+                case CHARACTER:
+                    res->value->c_val = -1*res->value->c_val;
+                    break;
+            }
+        }
+    }
+    else if(strcmp(unary_expression->operator, "++")==0){
+        if(value_node->datatype == BOOLEAN || value_node->datatype == STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, unary_expression->operator);
+            printf("first type: %s\n", getDatatype(value_node->datatype));
+            printf("second type: %s\n", getDatatype(value_node->datatype));
+            exit(0);
+        }
+        else{
+            res = cloneSymbol(value_node, this_line);
+            switch(res->datatype){
+                case INTEGER:
+                    res->value->i_val = res->value->i_val++;
+                    break;
+                case FLOAT:
+                    res->value->f_val = res->value->f_val++;
+                    break;
+                case DOUBLE:
+                    res->value->d_val = res->value->d_val++;
+                    break;
+                case CHARACTER:
+                    res->value->c_val = res->value->c_val++;
+                    break;
+            }
+        }
+    }
+    else if(strcmp(unary_expression->operator, "--")==0){
+        if(value_node->datatype == BOOLEAN || value_node->datatype == STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, unary_expression->operator);
+            printf("first type: %s\n", getDatatype(value_node->datatype));
+            printf("second type: %s\n", getDatatype(value_node->datatype));
+            exit(0);
+        }
+        else{
+            res = cloneSymbol(value_node, this_line);
+            switch(res->datatype){
+                case INTEGER:
+                    res->value->i_val = res->value->i_val--;
+                    break;
+                case FLOAT:
+                    res->value->f_val = res->value->f_val--;
+                    break;
+                case DOUBLE:
+                    res->value->d_val = res->value->d_val--;
+                    break;
+                case CHARACTER:
+                    res->value->c_val = res->value->c_val--;
+                    break;
+            }
+        }
+    }
+    else if(strcmp(unary_expression->operator, "!")==0){
+        if(value_node->datatype==INTEGER || value_node->datatype==CHARACTER){
+            res = cloneSymbol(value_node, this_line);
+            int i = 1;
+            switch(res->datatype){
+                case INTEGER:
+                    while(res->value->i_val)
+                        i *= res->value->i_val--;
+                    res->value->i_val = i;
+                    break;
+                case CHARACTER:
+                    while(res->value->c_val)
+                         i *= res->value->c_val--;
+                    res->value->c_val = i;
+                    break;
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, unary_expression->operator);
+            printf("first type: %s\n", getDatatype(value_node->datatype));
+            printf("second type: %s\n", getDatatype(value_node->datatype));
+            exit(0);
+        }
+    }
+    res->location = (Location*) malloc(sizeof(Location));
+    res->location->line = this_line;
+    return res;
+}
+
+ValueNode* executeTernaryExpressionNode(TernaryExpression *ternary_expression, int this_line){
+    ValueNode *test = executeExpressionStatementNode(ternary_expression->test, this_line);
+    ValueNode *consequent = executeExpressionStatementNode(ternary_expression->consequent, this_line);
+    ValueNode *alternate = executeExpressionStatementNode(ternary_expression->alternate, this_line);
+
+    ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
+    res->value = (Value*) malloc(sizeof(Value));
+    if(test->datatype==BOOLEAN){
+        if(test->value->b_val!='0')
+            res = cloneSymbol(consequent, this_line);
+        else
+            res = cloneSymbol(alternate, this_line);
+    }
+    else{
+        printf("JvC: [error: %d] incompatible types: %s cannot be converted to %s\n", getDatatype(test->datatype), "boolean");
+        exit(0);
+    }
+    return res;
+}
+
 ValueNode* executeExpressionStatementNode(ExpressionStatement *expression_statement, int this_line){
     ValueNode *res = (ValueNode*) malloc(sizeof(ValueNode));
     switch(expression_statement->type){
         case IDENTIFIER:
-            res = findSymbol(expression_statement->expression_type->identifier);
+            res = findSymbol(expression_statement->expression_type->identifier, this_line);
             if(res==NULL){
                 printf("JvC: [error: %d] cannot find symbol %s\n", this_line, expression_statement->expression_type->identifier);
                 exit(0);
@@ -2014,10 +2277,10 @@ ValueNode* executeExpressionStatementNode(ExpressionStatement *expression_statem
             res = executeBinaryExpressionNode(expression_statement->expression_type->binary_expression, this_line);
             break;
         case UNARYEXP:
-            // printUnaryExpressionNode(expression_statement->expression_type->unary_expression, indent+1);
+            res = executeUnaryExpressionNode(expression_statement->expression_type->unary_expression, this_line);
             break;
         case TERNARYEXP:
-            // printTernaryExpressionNode(expression_statement->expression_type->ternary_expression, indent+1);
+            res = executeTernaryExpressionNode(expression_statement->expression_type->ternary_expression, this_line);
             break;
     }
     return res;
