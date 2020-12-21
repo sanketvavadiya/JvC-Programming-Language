@@ -203,7 +203,7 @@ ARITHMETIC_1 : ARITHMETIC_1 multiplication ARITHMETIC_2     {$$ = makeBinaryExpr
              ;
 
 ARITHMETIC_2 : ARITHMETIC_2 exclamation     	{$$ = makeUnaryExpressionNode("!", '0', $1);}
-             | BRACKETS pow1 ARITHMETIC_2    	{$$ = makeBinaryExpressionNode($1, "pow", $3);}
+             | BRACKETS pow1 ARITHMETIC_2    	{$$ = makeBinaryExpressionNode($1, "**", $3);}
              | VALUE_or_ID increment            {$$ = makeUnaryExpressionNode("++", '0', $1);}
              | VALUE_or_ID decrement            {$$ = makeUnaryExpressionNode("--", '0', $1);}
              | BRACKETS                     	{$$ = $1;}

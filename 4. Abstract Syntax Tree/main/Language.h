@@ -930,53 +930,577 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     res->value = (Value*) malloc(sizeof(Value));
 
     if(strcmp(binary_expression->operator, "||")==0){
-
+        if(left->datatype==BOOLEAN && right->datatype){
+            res->datatype = BOOLEAN;
+            res->value->b_val = (left->value->b_val-'0') || (right->value->b_val-'0') ? '1' : '0';
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
     }
     else if(strcmp(binary_expression->operator, "&&")==0){
-
+        if(left->datatype==BOOLEAN && right->datatype){
+            res->datatype = BOOLEAN;
+            res->value->b_val = (left->value->b_val-'0') && (right->value->b_val-'0') ? '1' : '0';
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
     }
     else if(strcmp(binary_expression->operator, "|")==0){
-
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val | right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val | right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val | right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val | right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
     }
     else if(strcmp(binary_expression->operator, "^")==0){
-
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val ^ right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val ^ right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val ^ right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val ^ right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
     }
     else if(strcmp(binary_expression->operator, "&")==0){
-
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val & right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val & right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val & right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val & right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
     }
     else if(strcmp(binary_expression->operator, ">=")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, ">")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "<=")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "<")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "==")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "!=")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, ">>")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "<<")==0){
-
-    }
-    else if(strcmp(binary_expression->operator, "-")==0){
+        res->datatype = BOOLEAN;
         if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
-            printf("JvC: [error: %d]  bad operand types for binary operator '-'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==STRING || right->datatype==STRING){
-            printf("JvC: [error: %d]  bad operand types for binary operator '-'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val >= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val >= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val >= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val >= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val >= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val >= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val >= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val >= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val >= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val >= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val >= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val >= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val >= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val >= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val >= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val >= right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, ">")==0){
+        res->datatype = BOOLEAN;
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val > right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val > right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val > right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val > right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val > right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val > right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val > right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val > right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val > right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val > right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val > right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val > right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val > right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val > right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val > right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val > right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, "<=")==0){
+
+        res->datatype = BOOLEAN;
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val <= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val <= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val <= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val <= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val <= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val <= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val <= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val <= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val <= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val <= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val <= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val <= right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val <= right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val <= right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val <= right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val <= right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, "<")==0){
+        res->datatype = BOOLEAN;
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val < right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val < right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val < right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val < right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val < right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val < right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val < right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val < right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val < right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val < right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val < right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val < right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val < right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val < right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val < right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val < right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, "==")==0){
+        res->datatype = BOOLEAN;
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            if(left->datatype==BOOLEAN && right->datatype==BOOLEAN)
+                res->value->b_val = left->value->b_val == right->value->b_val ? '1' : '0';
+            else{
+                printf("JvC: [error: %d]  incomparable types: %s and %s\n", this_line, getDatatype(left->datatype), getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            if(left->datatype==STRING && right->datatype==STRING)
+                res->value->b_val = strcmp(left->value->str_val, right->value->str_val) ? '0' : '1';
+            else{
+                printf("JvC: [error: %d]  incomparable types: %s and %s\n", this_line, getDatatype(left->datatype), getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val == right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val == right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val == right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val == right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val == right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val == right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val == right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val == right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val == right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val == right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val == right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val == right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val == right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val == right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val == right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val == right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, "!=")==0){
+        res->datatype = BOOLEAN;
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            if(left->datatype==BOOLEAN && right->datatype==BOOLEAN)
+                res->value->b_val = left->value->b_val == right->value->b_val ? '1' : '0';
+            else{
+                printf("JvC: [error: %d]  incomparable types: %s and %s\n", this_line, getDatatype(left->datatype), getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            if(left->datatype==STRING && right->datatype==STRING)
+                res->value->b_val = strcmp(left->value->str_val, right->value->str_val) ? '1' : '0';
+            else{
+                printf("JvC: [error: %d]  incomparable types: %s and %s\n", this_line, getDatatype(left->datatype), getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->i_val != right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->i_val != right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->i_val != right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->i_val != right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->f_val != right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->f_val != right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->f_val != right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->f_val != right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->d_val != right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->d_val != right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->d_val != right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->d_val != right->value->c_val ? '1' : '0';
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER)
+                res->value->b_val = left->value->c_val != right->value->i_val ? '1' : '0';
+            else if(right->datatype==FLOAT)
+                res->value->b_val = left->value->c_val != right->value->f_val ? '1' : '0';
+            else if(right->datatype==DOUBLE)
+                res->value->b_val = left->value->c_val != right->value->d_val ? '1' : '0';
+            else if(right->datatype==CHARACTER)
+                res->value->b_val = left->value->c_val != right->value->c_val ? '1' : '0';
+        }
+    }
+    else if(strcmp(binary_expression->operator, ">>")==0){
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val >> right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val >> right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val >> right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val >> right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+    }
+    else if(strcmp(binary_expression->operator, "<<")==0){
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val << right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->i_val << right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val << right->value->i_val;
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = left->value->c_val << right->value->c_val;
+            }
+            else{
+                printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+                printf("first type: %s\n", getDatatype(left->datatype));
+                printf("second type: %s\n", getDatatype(right->datatype));
+                exit(0);
+            }
+        }
+        else{
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+    }
+    else if(strcmp(binary_expression->operator, "-")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
@@ -1056,7 +1580,7 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     }
     else if(strcmp(binary_expression->operator, "+")==0){
         if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
-            printf("JvC: [error: %d]  bad operand types for binary operator '+'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
@@ -1165,13 +1689,13 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     }
     else if(strcmp(binary_expression->operator, "*")==0){
         if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
-            printf("JvC: [error: %d]  bad operand types for binary operator '*'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==STRING || right->datatype==STRING){
-            printf("JvC: [error: %d]  bad operand types for binary operator '*'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
@@ -1251,13 +1775,13 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     }
     else if(strcmp(binary_expression->operator, "/")==0){
         if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
-            printf("JvC: [error: %d]  bad operand types for binary operator '/'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==STRING || right->datatype==STRING){
-            printf("JvC: [error: %d]  bad operand types for binary operator '/'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
@@ -1337,25 +1861,25 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
     }
     else if(strcmp(binary_expression->operator, "%")==0){
         if(left->datatype==FLOAT || right->datatype==FLOAT){
-            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==DOUBLE || right->datatype==DOUBLE){
-            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
-            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
         }
         if(left->datatype==STRING || right->datatype==STRING){
-            printf("JvC: [error: %d]  bad operand types for binary operator '%'\n", this_line);
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
             printf("first type: %s\n", getDatatype(left->datatype));
             printf("second type: %s\n", getDatatype(right->datatype));
             exit(0);
@@ -1381,8 +1905,91 @@ ValueNode* executeBinaryExpressionNode(BinaryExpression *binary_expression, int 
             }
         }
     }
-    else if(strcmp(binary_expression->operator, "pow")==0){
-
+    else if(strcmp(binary_expression->operator, "**")==0){
+        if(left->datatype==BOOLEAN || right->datatype==BOOLEAN){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==STRING || right->datatype==STRING){
+            printf("JvC: [error: %d]  bad operand types for binary operator %s\n", this_line, binary_expression->operator);
+            printf("first type: %s\n", getDatatype(left->datatype));
+            printf("second type: %s\n", getDatatype(right->datatype));
+            exit(0);
+        }
+        if(left->datatype==INTEGER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = pow(left->value->i_val, right->value->i_val);
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = pow(left->value->i_val, right->value->f_val);
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->i_val, right->value->d_val);
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = INTEGER;
+                res->value->i_val = pow(left->value->i_val, right->value->c_val);
+            }
+        }
+        else if(left->datatype==FLOAT){
+            if(right->datatype==INTEGER){
+                res->datatype = FLOAT;
+                res->value->f_val = pow(left->value->f_val, right->value->i_val);
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = pow(left->value->f_val, right->value->f_val);
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->f_val, right->value->d_val);
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = FLOAT;
+                res->value->f_val = pow(left->value->f_val, right->value->c_val);
+            }
+        }
+        else if(left->datatype==DOUBLE){
+            if(right->datatype==INTEGER){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->d_val, right->value->i_val);
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->d_val = pow(left->value->d_val, right->value->f_val);
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->d_val, right->value->d_val);
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->d_val, right->value->c_val);
+            }
+        }
+        else if(left->datatype==CHARACTER){
+            if(right->datatype==INTEGER){
+                res->datatype = INTEGER;
+                res->value->i_val = pow(left->value->c_val, right->value->i_val);
+            }
+            else if(right->datatype==FLOAT){
+                res->datatype = FLOAT;
+                res->value->f_val = pow(left->value->c_val, right->value->f_val);
+            }
+            else if(right->datatype==DOUBLE){
+                res->datatype = DOUBLE;
+                res->value->d_val = pow(left->value->c_val, right->value->d_val);
+            }
+            else if(right->datatype==CHARACTER){
+                res->datatype = CHARACTER;
+                res->value->i_val = pow(left->value->c_val, right->value->c_val);
+            }
+        }
     }
     res->location = (Location*) malloc(sizeof(Location));
     res->location->line = this_line;
@@ -1394,6 +2001,10 @@ ValueNode* executeExpressionStatementNode(ExpressionStatement *expression_statem
     switch(expression_statement->type){
         case IDENTIFIER:
             res = findSymbol(expression_statement->expression_type->identifier);
+            if(res==NULL){
+                printf("JvC: [error: %d] cannot find symbol %s\n", this_line, expression_statement->expression_type->identifier);
+                exit(0);
+            }
             res = cloneSymbol(res, this_line);
             break;
         case NUMERIC:
