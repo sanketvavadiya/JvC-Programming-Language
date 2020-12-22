@@ -81,10 +81,15 @@ typedef struct AssignmentStatement{
     ExpressionStatement *right;
 }AssignmentStatement;
 
+typedef struct PrintStatement{
+    ExpressionStatement *expression_statement;
+}PrintStatement;
+
 typedef union StatementType{
     ExpressionStatement *expression_statement;
     DeclarationStatement *declaration_statement;
     AssignmentStatement *assignment_statement;
+    PrintStatement *print_statement;
 }StatementType;
 
 typedef struct Statement{

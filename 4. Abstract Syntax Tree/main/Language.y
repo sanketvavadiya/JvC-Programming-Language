@@ -46,7 +46,7 @@
 %type <c_val> BOOLEAN_VAL
 %type <i_val> DATATYPE
 %type <value_node> VALUE
-%type <expression_statement> VALUE_or_ID ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY EXPRESSION_ST
+%type <expression_statement> VALUE_or_ID ARITHMETIC_EX ARITHMETIC_1 ARITHMETIC_2 BRACKETS SHIFTS RELATIONAL_EXP_1 RELATIONAL_EXP_2 BITWISE_OPERATIONS LOGICAL TERNARY EXPRESSION_ST PRINT_ST
 %type <declaration_list> ID LIST
 %type <declaration_statement> DECLARATION_ST
 %type <assignment_statement> ASSIGNMENT_ST
@@ -75,12 +75,16 @@ OPTIONAL_NEWLINE : /* epsilon */
 STATEMENTS : EXPRESSION_ST				{$$ = makeStatementNode($1, EXPRESSION);}
 		       | DECLARATION_ST 			{$$ = makeStatementNode($1, DECLARATION);}
 		       | ASSIGNMENT_ST 				{$$ = makeStatementNode($1, ASSIGNMENT);}
+           | PRINT_ST             {$$ = makeStatementNode($1, PRINT);}
            ;
 
 EXPRESSION_ST : TERNARY {$$ = $1;}
 			  ;
 
 DECLARATION_ST : DATATYPE LIST {$$ = makeDeclarationStatementNode($1, $2);}
+               ;
+
+PRINT_ST : print openbracket EXPRESSION_ST closebracket {$$ = $3;}               
 
 DATATYPE : intdt      {$$ = INTEGER;}
          | floatdt    {$$ = FLOAT;}

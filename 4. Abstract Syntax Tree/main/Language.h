@@ -133,6 +133,9 @@ Statement* makeStatementNode(void *statement_type, int type){
         case ASSIGNMENT:
             res->statement_type->assignment_statement = (AssignmentStatement*)statement_type;
             break;
+        case PRINT:
+            res->statement_type->print_statement = (PrintStatement*)statement_type;
+            break;
     }
     return res;
 }
@@ -312,6 +315,9 @@ void printStatementNode(Statement *statement, int indent){
         case ASSIGNMENT:
             printAssignmentStatementNode(statement->statement_type->assignment_statement, indent+1);
             break;
+        case PRINT:
+            printPrintStatementNode(statement->statement_type->print_statement, indent+1);
+            break;
     }
 }
 
@@ -425,6 +431,12 @@ void printExpressionStatementNode(ExpressionStatement *expression_statement, int
             printTernaryExpressionNode(expression_statement->expression_type->ternary_expression, indent+1);
             break;
     }
+}
+
+void printPrintStatementNode(PrintStatement *print_statement, int indent){
+    printIndent(indent);
+    printf("PrintStatement\n");
+    printExpressionStatementNode(print_statement, indent+1);
 }
 
 void printValueNode(ValueNode *value_node, int indent){
@@ -926,6 +938,9 @@ void executeStatementNode(Statement *statement, int this_line){
         case ASSIGNMENT:
             executeAssignmentStatementNode(statement->statement_type->assignment_statement, this_line);
             break;
+        case PRINT:
+            executePrintStatementNode(statement->statement_type->print_statement, this_line);
+            break;
     }
 }
 
@@ -1112,6 +1127,14 @@ void executeDeclarationListNode(DeclarationList *declaration_list, int datatype,
         insertInSymbolTable(ptr->identifier, ptr->init, datatype, this_line);
         ptr = ptr->next;
     }
+}
+
+void executePrintStatementNode(PrintStatement *print_statement, int this_line){
+    ValueNode *res = executeExpressionStatementNode(print_statement, this_line);
+    if(res->datatype!=STRING)
+        printf("%s\n", toString(res));
+    else
+        printf("%s\n", res->value->str_val);
 }
 
 ValueNode* executeValueNode(ValueNode *value_node){
