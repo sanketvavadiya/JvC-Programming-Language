@@ -769,10 +769,10 @@ ValueNode* findSymbol(char *identifier, int this_line){
     SymbolTable *ptr = first_symbol;
     while(ptr!=NULL){
         if(strcmp(ptr->identifier, identifier) == 0){
-            if(ptr->value_node->scope != scope){
-                printf("JvC: [error: %d] symbol '%s' is out of scope\n", ptr->value_node->location->line, ptr->identifier);
-                exit(0);
-            }
+            // if(ptr->value_node->scope <= scope){
+            //     printf("JvC: [error: %d] symbol '%s' is out of scope\n", ptr->value_node->location->line, ptr->identifier);
+            //     exit(0);
+            // }
             return ptr->value_node;
         }
         ptr = ptr->next;
@@ -872,6 +872,20 @@ void showVariables(){
     }
 }
 
+void removeSymbols(int this_scope){
+    SymbolTable *ptr = first_symbol, *prev = NULL;
+    while(ptr!=NULL){
+        if(ptr->value_node->scope==this_scope){
+            prev->next = ptr->next;
+            ptr = ptr->next;
+        }
+        else{
+            prev = ptr;
+            ptr = ptr->next;
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                       //
 // --------------------------------------------- Execution Functions --------------------------------------------- //   //
@@ -887,10 +901,10 @@ void executeProgram(StatementSet *first_statement){
                 executeStatementNode(ptr->statement_set_type->statement, this_line);
                 break;
             case IFSTATEMENT:
-                // executeIfStatementNode(ptr->statement_set_type->if_statement);
+                executeIfStatementNode(ptr->statement_set_type->if_statement, this_line);
                 break;
             case WHILESTATEMENT:
-                // executeWhileStatementNode(ptr->statement_set_type->while_statement);
+                executeWhileStatementNode(ptr->statement_set_type->while_statement);
                 break;
             case FORSTATEMENT:
                 // executeForStatementNode(ptr->statement_set_type->for_statement);
@@ -913,6 +927,45 @@ void executeStatementNode(Statement *statement, int this_line){
             executeAssignmentStatementNode(statement->statement_type->assignment_statement, this_line);
             break;
     }
+}
+
+void executeIfStatementNode(IfStatement *if_statement, int this_line){
+    scope++;
+    ValueNode *test = executeExpressionStatementNode(if_statement->test, this_line);
+    
+    if(test->datatype==BOOLEAN){
+        if(test->value->b_val!='0'){
+            executeProgram(if_statement->consequent);
+            removeSymbols(scope);
+        }
+        else{
+            executeProgram(if_statement->alternate);
+            removeSymbols(scope);
+        }
+    }
+    else{
+        printf("JvC: [error: %d] incompatible types: %s cannot be converted to %s\n", getDatatype(test->datatype), "boolean");
+        exit(0);
+    }
+    scope--;
+}
+
+void executeWhileStatementNode(WhileStatement *while_statement, int this_line){
+    scope++;
+    ValueNode *test = executeExpressionStatementNode(while_statement->test, this_line);
+    
+    if(test->datatype==BOOLEAN){
+        while(test->value->b_val!='0'){
+            executeProgram(while_statement->body);
+            removeSymbols(scope);
+            test = executeExpressionStatementNode(while_statement->test, this_line);
+        }
+    }
+    else{
+        printf("JvC: [error: %d] incompatible types: %s cannot be converted to %s\n", getDatatype(test->datatype), "boolean");
+        exit(0);
+    }
+    scope--;
 }
 
 void executeDeclarationStatementNode(DeclarationStatement *declaration_statement, int this_line){
@@ -2168,21 +2221,22 @@ ValueNode* executeUnaryExpressionNode(UnaryExpression *unary_expression, int thi
             exit(0);
         }
         else{
-            res = cloneSymbol(value_node, this_line);
-            switch(res->datatype){
+            value_node = findSymbol(unary_expression->expression_statement->expression_type->identifier, this_line);
+            switch(value_node->datatype){
                 case INTEGER:
-                    res->value->i_val = res->value->i_val++;
+                    value_node->value->i_val++;
                     break;
                 case FLOAT:
-                    res->value->f_val = res->value->f_val++;
+                    value_node->value->f_val++;
                     break;
                 case DOUBLE:
-                    res->value->d_val = res->value->d_val++;
+                    value_node->value->d_val++;
                     break;
                 case CHARACTER:
-                    res->value->c_val = res->value->c_val++;
+                    value_node->value->c_val++;
                     break;
             }
+            res = value_node;
         }
     }
     else if(strcmp(unary_expression->operator, "--")==0){
@@ -2193,21 +2247,22 @@ ValueNode* executeUnaryExpressionNode(UnaryExpression *unary_expression, int thi
             exit(0);
         }
         else{
-            res = cloneSymbol(value_node, this_line);
-            switch(res->datatype){
+            value_node = findSymbol(unary_expression->expression_statement->expression_type->identifier, this_line);
+            switch(value_node->datatype){
                 case INTEGER:
-                    res->value->i_val = res->value->i_val--;
+                    value_node->value->i_val--;
                     break;
                 case FLOAT:
-                    res->value->f_val = res->value->f_val--;
+                    value_node->value->f_val--;
                     break;
                 case DOUBLE:
-                    res->value->d_val = res->value->d_val--;
+                    value_node->value->d_val--;
                     break;
                 case CHARACTER:
-                    res->value->c_val = res->value->c_val--;
+                    value_node->value->c_val--;
                     break;
             }
+            res = value_node;
         }
     }
     else if(strcmp(unary_expression->operator, "!")==0){
@@ -2234,8 +2289,6 @@ ValueNode* executeUnaryExpressionNode(UnaryExpression *unary_expression, int thi
             exit(0);
         }
     }
-    res->location = (Location*) malloc(sizeof(Location));
-    res->location->line = this_line;
     return res;
 }
 
@@ -2324,8 +2377,10 @@ void insertInSymbolTable(char *identifier, ExpressionStatement *init, int dataty
     else{
         ValueNode *value_node = executeExpressionStatementNode(init, this_line);
         new_node->value_node = changeValueNode(value_node, datatype);
-    }
-    new_node->value_node->scope = scope;
+        new_node->value_node->location = (Location*) malloc(sizeof(Location));
+        new_node->value_node->location->line = this_line;
+        new_node->value_node->scope = scope;
+    }    
     if(first_symbol==NULL){
         first_symbol = new_node;
         first_symbol->next = NULL;
@@ -2336,7 +2391,6 @@ void insertInSymbolTable(char *identifier, ExpressionStatement *init, int dataty
           if(strcmp(ptr->identifier, new_node->identifier) == 0) {
             printf("JvC: [error: %d] variable %s is already defined\n", line, new_node->identifier);
             exit(0);
-            return;
           }
           ptr = ptr->next;
         }
@@ -2344,7 +2398,6 @@ void insertInSymbolTable(char *identifier, ExpressionStatement *init, int dataty
         if(strcmp(ptr->identifier, new_node->identifier) == 0){
           printf("JvC: [error: %d] variable %s is already defined\n", line, new_node->identifier);
           exit(0);
-          return NULL;
         }
 
         ptr->next = new_node;

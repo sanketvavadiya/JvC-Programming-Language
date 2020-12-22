@@ -106,7 +106,7 @@ ASSIGNMENT_ST : id equal EXPRESSION_ST 				{$$ = makeAssignmentStatementNode($1,
               | id modulo equal EXPRESSION_ST 		{$$ = makeAssignmentStatementNode($1, "%=", $4);}
               ;
 
-IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {scope++; $$ = makeIfStatementNode($1, $2, 2); scope--;}
+IF_CONSTRUCT : IF_BLOCK OPTIONAL_BLOCKS {$$ = makeIfStatementNode($1, $2, 2);}
 			 ;
 
 IF_BLOCK : ifkeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
@@ -135,13 +135,13 @@ ELSE_BLOCK : /* epsilon */ {$$ = NULL;}
 WHILE_LOOP : whilekeyword openbracket EXPRESSION_ST closebracket OPTIONAL_NEWLINE
 			 opencurly OPTIONAL_NEWLINE
 			 	STATEMENT_SET
-			 closecurly newline {scope++; $8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8); scope--; line++;}
+			 closecurly newline {$8 = reverseStatements($8); $$ = makeWhileStatementNode($3, $8); line++;}
 			;
 
 FOR_LOOP : forkeyword openbracket EXP_ASGN_ST_EPS semicolon EXP_ASGN_ST semicolon EXP_ASGN_ST closebracket OPTIONAL_NEWLINE
 			opencurly OPTIONAL_NEWLINE
 				STATEMENT_SET
-			closecurly newline {scope++; $12 = reverseStatements($12); $$ = makeForStatementNode($3, $5, $7, $12); scope--; line++;}
+			closecurly newline {$12 = reverseStatements($12); $$ = makeForStatementNode($3, $5, $7, $12); line++;}
 		 ;
 
 EXP_ASGN_ST_EPS : /* epsilon */ 	{$$ = NULL;}
