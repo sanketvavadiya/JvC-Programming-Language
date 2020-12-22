@@ -904,10 +904,10 @@ void executeProgram(StatementSet *first_statement){
                 executeIfStatementNode(ptr->statement_set_type->if_statement, this_line);
                 break;
             case WHILESTATEMENT:
-                executeWhileStatementNode(ptr->statement_set_type->while_statement);
+                executeWhileStatementNode(ptr->statement_set_type->while_statement, this_line);
                 break;
             case FORSTATEMENT:
-                // executeForStatementNode(ptr->statement_set_type->for_statement);
+                executeForStatementNode(ptr->statement_set_type->for_statement, this_line);
                 break;
         }
         ptr = ptr->next;
@@ -959,6 +959,25 @@ void executeWhileStatementNode(WhileStatement *while_statement, int this_line){
             executeProgram(while_statement->body);
             removeSymbols(scope);
             test = executeExpressionStatementNode(while_statement->test, this_line);
+        }
+    }
+    else{
+        printf("JvC: [error: %d] incompatible types: %s cannot be converted to %s\n", getDatatype(test->datatype), "boolean");
+        exit(0);
+    }
+    scope--;
+}
+
+void executeForStatementNode(ForStatement *for_statement, int this_line){
+    if(for_statement->init!=NULL)
+        executeStatementNode(for_statement->init, this_line);
+    scope++;
+    ValueNode *test = executeExpressionStatementNode(for_statement->test, this_line);
+    if(test!=NULL && test->datatype==BOOLEAN){
+        for(;test->value->b_val!='0';test = executeExpressionStatementNode(for_statement->test, this_line)){
+            executeProgram(for_statement->body);
+            removeSymbols(scope);
+            executeStatementNode(for_statement->update, this_line);
         }
     }
     else{
