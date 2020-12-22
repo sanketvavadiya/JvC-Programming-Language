@@ -1,5 +1,5 @@
 # JvC-Programming-Language
-Compiler design repository. My own high-level programming language, which is similar to C (provides very basic functionalities) and displays error message similar to Java.
+Compiler design repository. My high-level programming language, which is similar to C (provides very basic functionalities) and displays error message similar to Java.
 
 ## Languages and Tools
 1. Win flex-bison
